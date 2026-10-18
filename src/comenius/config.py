@@ -43,6 +43,9 @@ class LessonConfig(BaseModel):
     max_buildup_steps: int = 4
     recall_intervals_s: list[float] = Field(default_factory=lambda: [5.0, 25.0, 120.0, 600.0])
     gap_s: float = 0.5
+    step_gap_s: float = Field(
+        1.5, description="Silence after a model answer, before the next build-up step or cue."
+    )
     line_gap_s: float = 0.7
     section_gap_s: float = 1.5
     # English narration. Off by default: the target language carries the lesson,
@@ -50,6 +53,7 @@ class LessonConfig(BaseModel):
     line_translations: bool = Field(False, description="Narrate each line's English in build-up.")
     introduce_new_words: bool = Field(False, description="'The word for X is ...' before lines.")
     guideposts: bool = Field(False, description="Instructions like 'Now the whole line.'")
+    signposts: bool = Field(True, description="Announce each section ('Substitution drills.').")
 
     def learner_pause(self, answer_duration_s: float) -> float:
         raw = self.pause_answer_factor * answer_duration_s + self.pause_base_s

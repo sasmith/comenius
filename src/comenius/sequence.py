@@ -63,29 +63,59 @@ def fold_accents(text: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
 
 
-def buildup_fragments(sentence: str, max_steps: int = 4) -> list[str]:
-    """Backward build-up of one sentence.
+def _sentence_starts(words: list[str]) -> list[int]:
+    starts = [0]
+    for i, w in enumerate(words[:-1]):
+        if w.rstrip('"”»)').endswith((".", "?", "!", "…")):
+            starts.append(i + 1)
+    return starts
 
-    Returns fragments growing from the end of the sentence; the last element is
-    the full sentence with its punctuation. Intermediate fragments are stripped
-    of punctuation so TTS doesn't give them question/exclamation intonation.
 
-    >>> buildup_fragments("Perdón, ¿dónde está la estación?", 3)
-    ['la estación', 'dónde está la estación', 'Perdón, ¿dónde está la estación?']
+def buildup_fragments(line: str, max_steps: int = 4) -> list[str]:
+    """Backward build-up of a whole dialog line.
+
+    Fragments grow from the end of the line toward its beginning; the last
+    element is the full line. A fragment inside the final sentence is stripped
+    of punctuation (so TTS doesn't give it question intonation). A fragment that
+    reaches back into an earlier sentence starts at a phrase boundary (sentence
+    start or after a comma) and keeps its punctuation.
+
+    >>> buildup_fragments("Buenas tardes. ¿En qué le puedo ayudar?")
+    ['puedo ayudar', 'qué le puedo ayudar', '¿En qué le puedo ayudar?', \
+'Buenas tardes. ¿En qué le puedo ayudar?']
     """
-    words = strip_punct(sentence).split()
+    words = line.split()
     n = len(words)
     if n <= 3 or max_steps <= 1:
-        return [sentence]
+        return [line]
+    sentence_starts = _sentence_starts(words)
+    last = sentence_starts[-1]
+    after_comma = [i + 1 for i, w in enumerate(words[:last]) if w.endswith(",")]
+    # Allowed start positions: anywhere in the final sentence, or a phrase
+    # boundary in an earlier one.
+    allowed = sorted(set(range(last, n)) | set(sentence_starts) | set(after_comma))
+
     steps = min(max_steps, n - 1)
-    # Evenly spaced suffix lengths, first one at least 2 words when possible.
-    lengths: list[int] = []
+    starts: set[int] = set()
     for i in range(1, steps):
-        length = max(2, round(n * i / steps))
-        if length < n and (not lengths or length > lengths[-1]):
-            lengths.append(length)
-    frags = [" ".join(words[n - k :]) for k in lengths]
-    return [*frags, sentence]
+        target = n - max(2, round(n * i / steps))
+        if target <= 0:
+            continue
+        snapped = min(allowed, key=lambda c: (abs(c - target), -c))
+        if 0 < snapped < n - 1 or snapped in sentence_starts[1:]:
+            starts.add(snapped)
+    if last > 0:
+        starts.add(last)  # always teach the final sentence on its own
+
+    frags = []
+    for start in sorted(starts, reverse=True):
+        if start == 0:
+            continue
+        if start > last:
+            frags.append(strip_punct(" ".join(words[start:])))
+        else:
+            frags.append(" ".join(words[start:]))
+    return [*frags, line]
 
 
 # ---------------------------------------------------------------------------
@@ -112,6 +142,7 @@ class _Builder:
     current_chapter: str = ""
     pending: list[_Recall] = field(default_factory=list)
     recalled_lines: set[int] = field(default_factory=set)
+    last_recalled: int | None = None
     _phrase_i: int = 0
 
     @property
@@ -160,6 +191,12 @@ class _Builder:
         if self.cfg.guideposts:
             self.narrate(text, pause_after)
 
+    def section(self, chapter: str, signpost: str) -> None:
+        """Start a chapter and, if enabled, announce it."""
+        self.chapter(chapter)
+        if self.cfg.signposts:
+            self.narrate(signpost, pause_after=self.cfg.step_gap_s)
+
     def learner_pause_for(self, voice: str, text: str, rate: float = 1.0) -> float:
         return self.cfg.learner_pause(self.dur(voice, self.lang, text, rate))
 
@@ -175,13 +212,13 @@ class _Builder:
         """Cue, learner pause sized to the answer, then the answer."""
         pause = self.learner_pause_for(answer_voice, answer)
         self.say(kind, prompt_voice, prompt_lang, prompt, pause_after=pause)
-        self.say("drill_answer", answer_voice, self.lang, answer, pause_after=self.cfg.gap_s)
+        self.say("drill_answer", answer_voice, self.lang, answer, pause_after=self.cfg.step_gap_s)
 
     def repeat_after_me(self, voice: VoiceRole, text: str, rate: float = 1.0) -> None:
         """Target audio, pause to repeat, target audio again."""
         pause = self.learner_pause_for(voice, text, rate)
         self.say("buildup", voice, self.lang, text, rate=rate, pause_after=pause)
-        self.say("buildup", voice, self.lang, text, rate=rate, pause_after=self.cfg.gap_s)
+        self.say("buildup", voice, self.lang, text, rate=rate, pause_after=self.cfg.step_gap_s)
 
     # -- recall scheduling ---------------------------------------------------
 
@@ -203,7 +240,13 @@ class _Builder:
         """
         fired: set[int] = set()
         while len(fired) < limit:
-            due = [p for p in self.pending if p.due_s <= self.clock and p.line_index not in fired]
+            due = [
+                p
+                for p in self.pending
+                if p.due_s <= self.clock
+                and p.line_index not in fired
+                and p.line_index != self.last_recalled  # never the same line twice in a row
+            ]
             if not due:
                 break
             r = due[0]
@@ -221,6 +264,7 @@ class _Builder:
             "recall", NARRATOR, NARRATOR_LANG, self.recall_phrase(r.prompt_en), r.voice, r.answer
         )
         self.recalled_lines.add(r.line_index)
+        self.last_recalled = r.line_index
 
     def recall_phrase(self, english: str) -> str:
         if not self.cfg.guideposts:
@@ -238,7 +282,9 @@ class _Builder:
     def flush_recalls(self) -> None:
         """Final consolidation: one more recall of each line still pending."""
         seen: set[int] = set()
-        remaining = sorted(self.pending, key=lambda r: r.line_index)
+        remaining = sorted(
+            self.pending, key=lambda r: (r.line_index == self.last_recalled, r.line_index)
+        )
         self.pending = []
         for r in remaining:
             if r.line_index in seen:
@@ -281,19 +327,18 @@ def build_timeline(
     b.chapter("Introduction")
     b.narrate(f"{script.title}.")
     b.narrate(script.setting)
-    b.guide("Listen to the conversation.", pause_after=cfg.section_gap_s / 2)
+    b.clock += cfg.section_gap_s / 2
 
     # 2. Dialog at natural speed
-    b.chapter("Dialog")
+    b.section("Listen", "Dialog. Listen.")
     for i, line in enumerate(script.dialog):
         b.say("dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s)
     b.clock += cfg.section_gap_s
 
     # 3. Build-up, line by line, with recall woven in
-    b.chapter("Build-up")
+    b.section("Repeat to learn", "Dialog. Repeat to learn.")
     b.guide("Now let's learn it line by line. Repeat each phrase out loud in the pause.")
     introduced: set[int] = set()
-    taught: set[str] = set()
     for i, line in enumerate(script.dialog):
         voice = line_voice(i)
         name = script.speaker(line.speaker).name
@@ -311,17 +356,12 @@ def build_timeline(
                 b.narrate(f"The word for '{word.gloss}' is")
                 b.repeat_after_me(voice, word.form or word.lemma, cfg.buildup_rate)
 
-        sentences = split_sentences(line.text)
-        for sentence in sentences:
-            key = fold_accents(strip_punct(sentence).lower())
-            if key in taught:
-                continue  # already built up earlier in the lesson
-            taught.add(key)
-            for frag in buildup_fragments(sentence, cfg.max_buildup_steps):
-                b.repeat_after_me(voice, frag, cfg.buildup_rate)
-        if len(sentences) > 1:
+        frags = buildup_fragments(line.text, cfg.max_buildup_steps)
+        for frag in frags[:-1]:
+            b.repeat_after_me(voice, frag, cfg.buildup_rate)
+        if len(frags) > 1:
             b.guide("Now the whole line.")
-            b.repeat_after_me(voice, line.text)
+        b.repeat_after_me(voice, line.text)
 
         b.maybe_recall(limit=2)
         b.schedule_recalls(i)
@@ -336,7 +376,7 @@ def build_timeline(
     b.clock += cfg.section_gap_s
 
     # 4. Dialog with pauses (shadowing)
-    b.chapter("Dialog with pauses")
+    b.section("Repeat for mastery", "Dialog. Repeat for mastery.")
     b.guide("Here's the conversation again. After each line, say it yourself.")
     for i, line in enumerate(script.dialog):
         pause = b.learner_pause_for(line_voice(i), line.text)
@@ -347,7 +387,7 @@ def build_timeline(
     # 5. Substitution drills
     subs = [d for d in script.drills if isinstance(d, SubstitutionDrill)]
     if subs:
-        b.chapter("Substitution drills")
+        b.section("Substitution drills", "Substitution drills.")
         for d_i, drill in enumerate(subs):
             voice = voices[d_i % len(voices)]
             b.guide("Practice this sentence." if d_i else "Let's practice with this sentence.")
@@ -365,7 +405,7 @@ def build_timeline(
     # 6. Translation drills
     trans = [d for d in script.drills if isinstance(d, TranslationDrill)]
     if trans:
-        b.chapter("Translation")
+        b.section("Translation drills", "Translation drills.")
         b.guide("Now, how would you say these?")
         n = 0
         for drill in trans:
@@ -380,7 +420,7 @@ def build_timeline(
 
     # 7. Review: earlier lessons, then a final pass over today's lines
     if script.review or b.pending:
-        b.chapter("Review")
+        b.section("Review", "Review.")
         if script.review:
             b.guide("Some phrases from earlier lessons.")
             for r_i, item in enumerate(script.review):
@@ -398,7 +438,7 @@ def build_timeline(
         b.clock += cfg.section_gap_s
 
     # 8. Final listening
-    b.chapter("Final listening")
+    b.section("Listen again", "Dialog. Listen again.")
     b.guide("Listen to the whole conversation one more time.")
     for i, line in enumerate(script.dialog):
         b.say("dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s)

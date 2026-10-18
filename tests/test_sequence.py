@@ -29,6 +29,40 @@ def test_intermediate_fragments_have_no_punctuation():
         assert not set(frag) & set("¿?¡!.,")
 
 
+def test_buildup_spans_the_whole_line():
+    frags = buildup_fragments("Buenas tardes. ¿En qué le puedo ayudar?")
+    assert frags[0] == "puedo ayudar"
+    assert "¿En qué le puedo ayudar?" in frags
+    assert frags[-1] == "Buenas tardes. ¿En qué le puedo ayudar?"
+
+
+def test_buildup_crosses_sentences_at_phrase_boundaries():
+    frags = buildup_fragments("Para mañana, por favor. ¿Cuánto cuesta?")
+    assert frags == ["¿Cuánto cuesta?", "por favor. ¿Cuánto cuesta?", frags[-1]]
+
+
+def test_sections_are_signposted(script):
+    narr = [s.text for s in build_timeline(script).segments if s.voice == "narrator"]
+    for sign in (
+        "Dialog. Listen.",
+        "Dialog. Repeat to learn.",
+        "Dialog. Repeat for mastery.",
+        "Substitution drills.",
+        "Translation drills.",
+    ):
+        assert sign in narr
+    quiet = LessonConfig(signposts=False)
+    assert "Substitution drills." not in [s.text for s in build_timeline(script, quiet).segments]
+
+
+def test_pause_before_next_buildup_step(script):
+    cfg = LessonConfig()
+    segs = [s for s in build_timeline(script, cfg).segments if s.kind == "buildup"]
+    # Pairs: (model + learner pause), (model again + step gap)
+    assert all(segs[i].pause_after_s >= 1.0 for i in range(0, len(segs), 2))
+    assert all(segs[i].pause_after_s == cfg.step_gap_s for i in range(1, len(segs), 2))
+
+
 def test_split_sentences():
     assert split_sentences("Buenas tardes. ¿En qué le puedo ayudar?") == [
         "Buenas tardes.",
@@ -41,13 +75,13 @@ def test_timeline_structure(script):
     titles = [c.title for c in t.chapters]
     assert titles == [
         "Introduction",
-        "Dialog",
-        "Build-up",
-        "Dialog with pauses",
+        "Listen",
+        "Repeat to learn",
+        "Repeat for mastery",
         "Substitution drills",
-        "Translation",
+        "Translation drills",
         "Review",
-        "Final listening",
+        "Listen again",
     ]
     # Segments are in time order and don't overlap
     for a, b in zip(t.segments, t.segments[1:], strict=False):
@@ -113,5 +147,5 @@ def test_narration_flags_restore_english(script):
     narr = [s.text for s in build_timeline(script, cfg).segments if s.voice == "narrator"]
     assert any(" says: " in t for t in narr)
     assert any(t.startswith("The word for") for t in narr)
-    assert "Now the whole line." in narr
+    assert any(t.startswith("Now I'll give you a word") for t in narr)
     assert any(t.startswith("How do you say") for t in narr)

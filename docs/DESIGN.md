@@ -65,18 +65,24 @@ vocabulary.
 
 ### 4.1 During a run or drive (audio)
 
-A typical 20–30 minute lesson:
+A typical 10–20 minute lesson. Each section is announced with a short English
+signpost ("Dialog. Listen.", "Dialog. Repeat to learn.", "Dialog. Repeat for
+mastery.", "Substitution drills.", "Translation drills."):
 
 1. **Intro** (narrator, English): the situation and who's speaking.
 2. **Dialog at natural speed**, once, in two distinct voices.
-3. **Build-up**, line by line, with no English. Each line is taught by backward build-up:
-   > *la estación* … *dónde está la estación* … *perdón, ¿dónde está la estación?*
+3. **Repeat to learn**: backward build-up of each whole line, with no English:
+   > *puedo ayudar* … *qué le puedo ayudar* … *¿En qué le puedo ayudar?* …
+   > *Buenas tardes. ¿En qué le puedo ayudar?*
 
-   Each fragment: target audio → pause to repeat → target audio again.
+   Build-up runs across the whole line, reaching into earlier sentences at
+   phrase boundaries. Each fragment: target audio → pause to repeat → target
+   audio again → short pause before the next, longer fragment.
    Meaning comes from context, the intro, and the PDF; there are no English
    line translations, new-word glosses, or instructions like "now the whole
    line" (each can be turned back on in config).
-4. **Dialog again**, with pauses after each line to shadow.
+4. **Repeat for mastery**: the full dialog again, with a pause after each line
+   to say it yourself.
 5. **Substitution drills**: a model sentence, then cue words to swap in;
    learner produces the new sentence in the pause; correct answer follows.
 6. **Translation drills**: English prompt → pause → target-language answer.
