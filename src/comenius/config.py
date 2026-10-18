@@ -41,6 +41,10 @@ class LessonConfig(BaseModel):
     pause_base_s: float = 1.0
     buildup_rate: float = 0.9
     max_buildup_steps: int = 4
+    in_lesson_recall: bool = Field(
+        False,
+        description="Weave English-cued recall of earlier lines into the lesson (Pimsleur-style).",
+    )
     recall_intervals_s: list[float] = Field(default_factory=lambda: [5.0, 25.0, 120.0, 600.0])
     gap_s: float = 0.5
     step_gap_s: float = Field(

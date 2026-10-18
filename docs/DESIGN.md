@@ -86,11 +86,11 @@ mastery.", "Substitution drills.", "Translation drills."):
 5. **Substitution drills**: a model sentence, then cue words to swap in;
    learner produces the new sentence in the pause; correct answer follows.
 6. **Translation drills**: English prompt → pause → target-language answer.
-7. **Graduated recall** woven through steps 3–6: earlier phrases are
-   prompted again at roughly 5 s, 25 s, 2 min, and 10 min after
-   introduction. The cue is just the English phrase ("Excuse me, where is
-   the station?"), followed by a pause and the answer. Recall and
-   translation cues are the only English after the intro.
+7. **No separate in-lesson recall by default.** Build-up, repeat-for-mastery,
+   and the drills already retrieve each line several times at growing gaps;
+   the spacing that matters more is across days (replaying a lesson, and
+   review items in later lessons). Pimsleur-style recall (English cue at
+   ~5 s, 25 s, 2 min, 10 min) is available with `in_lesson_recall = true`.
 8. **Review block**: items from earlier lessons that are due, prompted
    English → target.
 9. **Dialog a final time**, natural speed, no pauses.

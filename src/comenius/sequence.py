@@ -223,6 +223,8 @@ class _Builder:
     # -- recall scheduling ---------------------------------------------------
 
     def schedule_recalls(self, line_index: int) -> None:
+        if not self.cfg.in_lesson_recall:
+            return
         line = self.script.dialog[line_index]
         voice = self.script.speaker(line.speaker).voice_role
         for interval in self.cfg.recall_intervals_s:

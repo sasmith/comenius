@@ -90,8 +90,12 @@ def test_timeline_structure(script):
     assert all(s.lang == "en" for s in t.segments if s.voice == "narrator")
 
 
+def test_no_in_lesson_recall_by_default(script):
+    assert not [s for s in build_timeline(script).segments if s.kind == "recall"]
+
+
 def test_every_line_is_recalled_and_never_twice_in_a_row(script):
-    t = build_timeline(script)
+    t = build_timeline(script, LessonConfig(in_lesson_recall=True))
     recalls = [s for s in t.segments if s.kind == "recall"]
     recalled_answers = []
     for i, s in enumerate(t.segments):
@@ -143,7 +147,9 @@ def test_default_narration_is_minimal(script):
 
 
 def test_narration_flags_restore_english(script):
-    cfg = LessonConfig(line_translations=True, introduce_new_words=True, guideposts=True)
+    cfg = LessonConfig(
+        line_translations=True, introduce_new_words=True, guideposts=True, in_lesson_recall=True
+    )
     narr = [s.text for s in build_timeline(script, cfg).segments if s.voice == "narrator"]
     assert any(" says: " in t for t in narr)
     assert any(t.startswith("The word for") for t in narr)
