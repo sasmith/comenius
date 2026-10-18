@@ -1,0 +1,45 @@
+[project]
+name = "comenius"
+version = "0.1.0"
+description = "Generated, audio-first language lessons for running, driving, and commuting."
+readme = "README.md"
+authors = [{ name = "Alex" }]
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=1.15.0",
+    "genanki>=0.13.1",
+    "httpx>=0.28.1",
+    "pydantic>=2.14.1",
+    "pyyaml>=6.0.3",
+    "typer>=0.27.3",
+    "typst>=0.15.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+]
+
+[project.optional-dependencies]
+kokoro = ["kokoro-onnx>=0.4"]
+
+[project.scripts]
+comenius = "comenius.cli:app"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/comenius/pdf.py" = ["E501"]  # Typst template

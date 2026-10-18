@@ -65,22 +65,32 @@ vocabulary.
 
 ### 4.1 During a run or drive (audio)
 
-A typical 20–30 minute lesson:
+A typical 10–20 minute lesson. Each section is announced with a short English
+signpost ("Dialog. Listen.", "Dialog. Repeat to learn.", "Dialog. Repeat for
+mastery.", "Substitution drills.", "Translation drills."):
 
 1. **Intro** (narrator, English): the situation and who's speaking.
 2. **Dialog at natural speed**, once, in two distinct voices.
-3. **Build-up**, line by line. Each line is taught by backward build-up:
-   > *la estación* … *dónde está la estación* … *perdón, ¿dónde está la estación?*
+3. **Repeat to learn**: backward build-up of each whole line, with no English:
+   > *puedo ayudar* … *qué le puedo ayudar* … *¿En qué le puedo ayudar?* …
+   > *Buenas tardes. ¿En qué le puedo ayudar?*
 
-   Each fragment: target audio → pause to repeat → target audio again.
-   New words get an English gloss the first time.
-4. **Dialog again**, with pauses after each line to shadow.
+   Build-up runs across the whole line, reaching into earlier sentences at
+   phrase boundaries. Each fragment is played twice, each time followed by
+   the same pause to repeat it.
+   Meaning comes from context, the intro, and the PDF; there are no English
+   line translations, new-word glosses, or instructions like "now the whole
+   line" (each can be turned back on in config).
+4. **Repeat for mastery**: the full dialog again, with a pause after each line
+   to say it yourself.
 5. **Substitution drills**: a model sentence, then cue words to swap in;
    learner produces the new sentence in the pause; correct answer follows.
 6. **Translation drills**: English prompt → pause → target-language answer.
-7. **Graduated recall** woven through steps 3–6: earlier phrases are
-   prompted again at roughly 5 s, 25 s, 2 min, and 10 min after
-   introduction ("How do you say *excuse me, where is the station?*").
+7. **No separate in-lesson recall by default.** Build-up, repeat-for-mastery,
+   and the drills already retrieve each line several times at growing gaps;
+   the spacing that matters more is across days (replaying a lesson, and
+   review items in later lessons). Pimsleur-style recall (English cue at
+   ~5 s, 25 s, 2 min, 10 min) is available with `in_lesson_recall = true`.
 8. **Review block**: items from earlier lessons that are due, prompted
    English → target.
 9. **Dialog a final time**, natural speed, no pauses.
