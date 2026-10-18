@@ -45,6 +45,11 @@ class LessonConfig(BaseModel):
     gap_s: float = 0.5
     line_gap_s: float = 0.7
     section_gap_s: float = 1.5
+    # English narration. Off by default: the target language carries the lesson,
+    # and meaning comes from context, the intro, and the PDF.
+    line_translations: bool = Field(False, description="Narrate each line's English in build-up.")
+    introduce_new_words: bool = Field(False, description="'The word for X is ...' before lines.")
+    guideposts: bool = Field(False, description="Instructions like 'Now the whole line.'")
 
     def learner_pause(self, answer_duration_s: float) -> float:
         raw = self.pause_answer_factor * answer_duration_s + self.pause_base_s

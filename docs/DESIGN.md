@@ -69,18 +69,22 @@ A typical 20–30 minute lesson:
 
 1. **Intro** (narrator, English): the situation and who's speaking.
 2. **Dialog at natural speed**, once, in two distinct voices.
-3. **Build-up**, line by line. Each line is taught by backward build-up:
+3. **Build-up**, line by line, with no English. Each line is taught by backward build-up:
    > *la estación* … *dónde está la estación* … *perdón, ¿dónde está la estación?*
 
    Each fragment: target audio → pause to repeat → target audio again.
-   New words get an English gloss the first time.
+   Meaning comes from context, the intro, and the PDF; there are no English
+   line translations, new-word glosses, or instructions like "now the whole
+   line" (each can be turned back on in config).
 4. **Dialog again**, with pauses after each line to shadow.
 5. **Substitution drills**: a model sentence, then cue words to swap in;
    learner produces the new sentence in the pause; correct answer follows.
 6. **Translation drills**: English prompt → pause → target-language answer.
 7. **Graduated recall** woven through steps 3–6: earlier phrases are
    prompted again at roughly 5 s, 25 s, 2 min, and 10 min after
-   introduction ("How do you say *excuse me, where is the station?*").
+   introduction. The cue is just the English phrase ("Excuse me, where is
+   the station?"), followed by a pause and the answer. Recall and
+   translation cues are the only English after the intro.
 8. **Review block**: items from earlier lessons that are due, prompted
    English → target.
 9. **Dialog a final time**, natural speed, no pauses.

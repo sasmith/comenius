@@ -9,6 +9,10 @@ pause_base_s = 1.0
 buildup_rate = 0.9            # speaking rate for build-up fragments
 max_buildup_steps = 4
 recall_intervals_s = [5, 25, 120, 600]
+# English narration (all off by default; recall/translation cues are always English)
+line_translations = false     # "Ana says: <English>" before each line in build-up
+introduce_new_words = false   # "The word for 'tire' is ... llanta"
+guideposts = false            # "Now the whole line.", section instructions, "How do you say: ..."
 
 [tts]
 provider = "espeak"           # espeak (offline), azure, openai, elevenlabs

@@ -98,3 +98,20 @@ def test_golden_timeline(script):
         GOLDEN.parent.mkdir(exist_ok=True)
         GOLDEN.write_text(text, encoding="utf-8")
     assert text == GOLDEN.read_text(encoding="utf-8")
+
+
+def test_default_narration_is_minimal(script):
+    narr = [s.text for s in build_timeline(script).segments if s.voice == "narrator"]
+    # Only the intro and English recall/translation cues remain
+    assert not any(t.startswith(("Now", "Listen", "The word for", "Here's")) for t in narr)
+    assert not any(" says: " in t for t in narr)
+    assert narr[:2] == [f"{script.title}.", script.setting]
+
+
+def test_narration_flags_restore_english(script):
+    cfg = LessonConfig(line_translations=True, introduce_new_words=True, guideposts=True)
+    narr = [s.text for s in build_timeline(script, cfg).segments if s.voice == "narrator"]
+    assert any(" says: " in t for t in narr)
+    assert any(t.startswith("The word for") for t in narr)
+    assert "Now the whole line." in narr
+    assert any(t.startswith("How do you say") for t in narr)

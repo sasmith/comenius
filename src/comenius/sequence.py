@@ -155,6 +155,11 @@ class _Builder:
         gap = self.cfg.gap_s if pause_after is None else pause_after
         self.say("narration", NARRATOR, NARRATOR_LANG, text, pause_after=gap)
 
+    def guide(self, text: str, pause_after: float | None = None) -> None:
+        """Instructional narration, only when guideposts are enabled."""
+        if self.cfg.guideposts:
+            self.narrate(text, pause_after)
+
     def learner_pause_for(self, voice: str, text: str, rate: float = 1.0) -> float:
         return self.cfg.learner_pause(self.dur(voice, self.lang, text, rate))
 
@@ -218,6 +223,8 @@ class _Builder:
         self.recalled_lines.add(r.line_index)
 
     def recall_phrase(self, english: str) -> str:
+        if not self.cfg.guideposts:
+            return english
         templates = (
             "How do you say: {}",
             "Say: {}",
@@ -274,7 +281,7 @@ def build_timeline(
     b.chapter("Introduction")
     b.narrate(f"{script.title}.")
     b.narrate(script.setting)
-    b.narrate("Listen to the conversation.", pause_after=cfg.section_gap_s / 2)
+    b.guide("Listen to the conversation.", pause_after=cfg.section_gap_s / 2)
 
     # 2. Dialog at natural speed
     b.chapter("Dialog")
@@ -284,16 +291,19 @@ def build_timeline(
 
     # 3. Build-up, line by line, with recall woven in
     b.chapter("Build-up")
-    b.narrate("Now let's learn it line by line. Repeat each phrase out loud in the pause.")
+    b.guide("Now let's learn it line by line. Repeat each phrase out loud in the pause.")
     introduced: set[int] = set()
     taught: set[str] = set()
     for i, line in enumerate(script.dialog):
         voice = line_voice(i)
         name = script.speaker(line.speaker).name
-        b.narrate(f"{name} says: {line.translation}")
+        if cfg.line_translations:
+            b.narrate(f"{name} says: {line.translation}")
+        elif i:
+            b.clock += cfg.line_gap_s  # audible break between lines instead
 
         for w_i, word in enumerate(script.new_words):
-            if w_i in introduced:
+            if w_i in introduced or not cfg.introduce_new_words:
                 continue
             forms = [word.form or "", word.lemma]
             if _word_in_line(forms, line.text):
@@ -310,15 +320,15 @@ def build_timeline(
             for frag in buildup_fragments(sentence, cfg.max_buildup_steps):
                 b.repeat_after_me(voice, frag, cfg.buildup_rate)
         if len(sentences) > 1:
-            b.narrate("Now the whole line.")
+            b.guide("Now the whole line.")
             b.repeat_after_me(voice, line.text)
 
         b.maybe_recall(limit=2)
         b.schedule_recalls(i)
 
     leftover = [w for w_i, w in enumerate(script.new_words) if w_i not in introduced]
-    if leftover:
-        b.narrate("A few more words.")
+    if leftover and cfg.introduce_new_words:
+        b.guide("A few more words.")
         for word in leftover:
             b.narrate(f"The word for '{word.gloss}' is")
             b.repeat_after_me(voices[0], word.form or word.lemma, cfg.buildup_rate)
@@ -327,7 +337,7 @@ def build_timeline(
 
     # 4. Dialog with pauses (shadowing)
     b.chapter("Dialog with pauses")
-    b.narrate("Here's the conversation again. After each line, say it yourself.")
+    b.guide("Here's the conversation again. After each line, say it yourself.")
     for i, line in enumerate(script.dialog):
         pause = b.learner_pause_for(line_voice(i), line.text)
         b.say("shadow", line_voice(i), lang, line.text, pause_after=pause)
@@ -340,9 +350,9 @@ def build_timeline(
         b.chapter("Substitution drills")
         for d_i, drill in enumerate(subs):
             voice = voices[d_i % len(voices)]
-            b.narrate("Practice this sentence." if d_i else "Let's practice with this sentence.")
+            b.guide("Practice this sentence." if d_i else "Let's practice with this sentence.")
             b.repeat_after_me(voice, drill.model)
-            b.narrate(
+            b.guide(
                 "Now I'll give you a word. Put it into the sentence."
                 if d_i == 0
                 else "Put each word into the sentence."
@@ -356,7 +366,7 @@ def build_timeline(
     trans = [d for d in script.drills if isinstance(d, TranslationDrill)]
     if trans:
         b.chapter("Translation")
-        b.narrate("Now, how would you say these?")
+        b.guide("Now, how would you say these?")
         n = 0
         for drill in trans:
             for item in drill.items:
@@ -372,7 +382,7 @@ def build_timeline(
     if script.review or b.pending:
         b.chapter("Review")
         if script.review:
-            b.narrate("Some phrases from earlier lessons.")
+            b.guide("Some phrases from earlier lessons.")
             for r_i, item in enumerate(script.review):
                 b.prompt_then_answer(
                     "review",
@@ -383,16 +393,16 @@ def build_timeline(
                     item.answer,
                 )
         if b.pending:
-            b.narrate("And from today's conversation.")
+            b.guide("And from today's conversation.")
             b.flush_recalls()
         b.clock += cfg.section_gap_s
 
     # 8. Final listening
     b.chapter("Final listening")
-    b.narrate("Listen to the whole conversation one more time.")
+    b.guide("Listen to the whole conversation one more time.")
     for i, line in enumerate(script.dialog):
         b.say("dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s)
-    b.narrate(f"That's the end of this lesson: {script.title}.", pause_after=0.0)
+    b.guide(f"That's the end of this lesson: {script.title}.", pause_after=0.0)
 
     return Timeline(
         lesson_id=script.id,
