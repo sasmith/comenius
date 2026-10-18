@@ -1,0 +1,71 @@
+{
+  "id": "es-0001",
+  "lang": "es",
+  "dialect": "es-MX",
+  "title": "At the bike shop",
+  "setting": "Ana brings her bike to a neighborhood repair shop. The mechanic, Don Luis, greets her.",
+  "speakers": [
+    {"id": "L", "name": "Don Luis", "voice_role": "male_1"},
+    {"id": "A", "name": "Ana", "voice_role": "female_1"}
+  ],
+  "grammar_points": ["es.a1.necesitar_inf", "es.a1.usted", "es.a1.cuanto_cuesta"],
+  "new_words": [
+    {"lemma": "ayudar", "pos": "VERB", "gloss": "to help"},
+    {"lemma": "arreglar", "pos": "VERB", "gloss": "to fix, to repair"},
+    {"lemma": "bicicleta", "pos": "NOUN", "gloss": "bicycle"},
+    {"lemma": "pasar", "form": "pasa", "pos": "VERB", "gloss": "to happen"},
+    {"lemma": "llanta", "pos": "NOUN", "gloss": "tire"},
+    {"lemma": "ponchado", "form": "ponchada", "pos": "ADJ", "gloss": "punctured, flat (Mexico)"},
+    {"lemma": "mañana", "pos": "ADV", "gloss": "tomorrow"},
+    {"lemma": "costar", "form": "cuesta", "pos": "VERB", "gloss": "to cost"}
+  ],
+  "dialog": [
+    {"speaker": "L", "text": "Buenas tardes. ¿En qué le puedo ayudar?",
+     "translation": "Good afternoon. How can I help you?", "grammar_tags": ["es.a1.usted"]},
+    {"speaker": "A", "text": "Buenas tardes. Necesito arreglar mi bicicleta.",
+     "translation": "Good afternoon. I need to fix my bike.", "grammar_tags": ["es.a1.necesitar_inf"]},
+    {"speaker": "L", "text": "¿Qué le pasa?",
+     "translation": "What's wrong with it?", "grammar_tags": []},
+    {"speaker": "A", "text": "Tiene una llanta ponchada.",
+     "translation": "It has a flat tire.", "grammar_tags": []},
+    {"speaker": "L", "text": "Muy bien. ¿Para cuándo la necesita?",
+     "translation": "All right. When do you need it by?", "grammar_tags": ["es.a1.usted"]},
+    {"speaker": "A", "text": "Para mañana, por favor. ¿Cuánto cuesta?",
+     "translation": "By tomorrow, please. How much does it cost?", "grammar_tags": ["es.a1.cuanto_cuesta"]},
+    {"speaker": "L", "text": "Son cien pesos.",
+     "translation": "It's a hundred pesos.", "grammar_tags": []},
+    {"speaker": "A", "text": "Perfecto. Muchas gracias.",
+     "translation": "Perfect. Thank you very much.", "grammar_tags": []}
+  ],
+  "grammar_note": "Necesitar + infinitive means 'to need to do something': necesito arreglar, necesito comprar. Don Luis uses usted, the polite 'you': ¿En qué le puedo ayudar? and ¿Para cuándo la necesita? In Mexico a flat tire is una llanta ponchada.",
+  "drills": [
+    {"type": "substitution", "model": "Necesito arreglar mi bicicleta.",
+     "model_translation": "I need to fix my bike.",
+     "items": [
+       {"cue": "coche", "answer": "Necesito arreglar mi coche."},
+       {"cue": "teléfono", "answer": "Necesito arreglar mi teléfono."},
+       {"cue": "computadora", "answer": "Necesito arreglar mi computadora."}
+     ]},
+    {"type": "substitution", "model": "¿Cuánto cuesta la llanta?",
+     "model_translation": "How much is the tire?",
+     "items": [
+       {"cue": "la bicicleta", "answer": "¿Cuánto cuesta la bicicleta?"},
+       {"cue": "el café", "answer": "¿Cuánto cuesta el café?"},
+       {"cue": "el boleto", "answer": "¿Cuánto cuesta el boleto?"}
+     ]},
+    {"type": "translation",
+     "items": [
+       {"prompt_en": "I need to fix my car.", "answers": ["Necesito arreglar mi coche."]},
+       {"prompt_en": "What's wrong with it?", "answers": ["¿Qué le pasa?"]},
+       {"prompt_en": "It has a flat tire.", "answers": ["Tiene una llanta ponchada."]},
+       {"prompt_en": "By tomorrow, please.", "answers": ["Para mañana, por favor."]},
+       {"prompt_en": "How much does it cost?", "answers": ["¿Cuánto cuesta?"]},
+       {"prompt_en": "How can I help you?", "answers": ["¿En qué le puedo ayudar?"]}
+     ]}
+  ],
+  "review": [
+    {"prompt_en": "Good morning.", "answer": "Buenos días."},
+    {"prompt_en": "Where is the station?", "answer": "¿Dónde está la estación?"},
+    {"prompt_en": "Thank you very much.", "answer": "Muchas gracias."}
+  ]
+}

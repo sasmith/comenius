@@ -1,0 +1,25 @@
+# Example lesson spec. Generate with:
+#   ANTHROPIC_API_KEY=... uv run comenius generate examples/specs/es-0002.yaml --render
+id: es-0002
+lang: es
+dialect: es-MX
+level: A1
+topic: Dropping the kids off at school
+situation: >
+  A parent drops two kids off at school in the morning and chats briefly with a
+  teacher at the gate about pickup time.
+grammar_points: [es.a1.presente.ir, es.a1.hora]
+grammar_descriptions:
+  es.a1.presente.ir: "present tense of ir (voy, vas, va, vamos, van)"
+  es.a1.hora: "telling time: a las tres, a las tres y media"
+new_word_budget: [6, 10]
+required_words: [escuela, recoger]
+known_words: [hola, adiós, gracias, buenos, días, tardes, sí, no, bien, perfecto,
+  muchas, necesito, mañana, cuánto, cuesta, ayudar]
+review:
+  - {prompt_en: "I need to fix my bike.", answer: "Necesito arreglar mi bicicleta.", source_lesson: es-0001}
+  - {prompt_en: "How much does it cost?", answer: "¿Cuánto cuesta?", source_lesson: es-0001}
+dialog_lines: [6, 9]
+max_words_per_line: 12
+substitution_drills: 2
+translation_items: 6
