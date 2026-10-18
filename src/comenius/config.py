@@ -47,9 +47,7 @@ class LessonConfig(BaseModel):
     )
     recall_intervals_s: list[float] = Field(default_factory=lambda: [5.0, 25.0, 120.0, 600.0])
     gap_s: float = 0.5
-    step_gap_s: float = Field(
-        1.5, description="Silence after a model answer, before the next build-up step or cue."
-    )
+    step_gap_s: float = Field(1.5, description="Silence after a drill answer, before the next cue.")
     line_gap_s: float = 0.7
     section_gap_s: float = 1.5
     # English narration. Off by default: the target language carries the lesson,

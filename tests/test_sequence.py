@@ -55,12 +55,11 @@ def test_sections_are_signposted(script):
     assert "Substitution drills." not in [s.text for s in build_timeline(script, quiet).segments]
 
 
-def test_pause_before_next_buildup_step(script):
-    cfg = LessonConfig()
-    segs = [s for s in build_timeline(script, cfg).segments if s.kind == "buildup"]
-    # Pairs: (model + learner pause), (model again + step gap)
-    assert all(segs[i].pause_after_s >= 1.0 for i in range(0, len(segs), 2))
-    assert all(segs[i].pause_after_s == cfg.step_gap_s for i in range(1, len(segs), 2))
+def test_both_repetitions_get_the_same_pause(script):
+    segs = [s for s in build_timeline(script).segments if s.kind == "buildup"]
+    for first, second in zip(segs[::2], segs[1::2], strict=True):
+        assert first.text == second.text
+        assert first.pause_after_s == second.pause_after_s >= 1.0
 
 
 def test_split_sentences():

@@ -215,10 +215,10 @@ class _Builder:
         self.say("drill_answer", answer_voice, self.lang, answer, pause_after=self.cfg.step_gap_s)
 
     def repeat_after_me(self, voice: VoiceRole, text: str, rate: float = 1.0) -> None:
-        """Target audio, pause to repeat, target audio again."""
+        """Target audio and a pause to repeat, twice, with identical pauses."""
         pause = self.learner_pause_for(voice, text, rate)
         self.say("buildup", voice, self.lang, text, rate=rate, pause_after=pause)
-        self.say("buildup", voice, self.lang, text, rate=rate, pause_after=self.cfg.step_gap_s)
+        self.say("buildup", voice, self.lang, text, rate=rate, pause_after=pause)
 
     # -- recall scheduling ---------------------------------------------------
 

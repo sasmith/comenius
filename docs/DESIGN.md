@@ -76,8 +76,8 @@ mastery.", "Substitution drills.", "Translation drills."):
    > *Buenas tardes. ¿En qué le puedo ayudar?*
 
    Build-up runs across the whole line, reaching into earlier sentences at
-   phrase boundaries. Each fragment: target audio → pause to repeat → target
-   audio again → short pause before the next, longer fragment.
+   phrase boundaries. Each fragment is played twice, each time followed by
+   the same pause to repeat it.
    Meaning comes from context, the intro, and the PDF; there are no English
    line translations, new-word glosses, or instructions like "now the whole
    line" (each can be turned back on in config).
