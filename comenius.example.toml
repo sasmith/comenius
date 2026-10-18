@@ -18,10 +18,11 @@ signposts = true              # "Dialog. Repeat to learn.", "Substitution drills
 guideposts = false            # "Now the whole line.", section instructions, "How do you say: ..."
 
 [tts]
-provider = "espeak"           # espeak (offline), azure, openai, elevenlabs
+provider = "espeak"           # espeak (offline, robotic), kokoro (local neural), azure, openai, elevenlabs
 cache_dir = ".cache/tts"
 azure_region = "westus2"      # or AZURE_SPEECH_REGION
 openai_model = "gpt-4o-mini-tts"
+kokoro_dir = "~/.cache/comenius/kokoro"
 
 # Override voices per provider (roles: narrator, female_1, male_1, female_2, male_2)
 # [tts.voices.azure]

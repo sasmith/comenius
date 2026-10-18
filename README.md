@@ -30,7 +30,18 @@ uv run comenius render fixtures/lessons/es-0001.json
 # -> out/es-0001/lesson.mp3, lesson.pdf, lesson.apkg, transcript.txt, timeline.json
 ```
 
-Use a real voice provider (see `comenius.example.toml` for voices):
+For good free voices, use Kokoro, an open-weights neural model that runs
+locally (about 350 MB; Spanish voices Dora and Alex):
+
+```sh
+uv sync --extra kokoro
+mkdir -p ~/.cache/comenius/kokoro && cd ~/.cache/comenius/kokoro && \
+  curl -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx \
+       -LO https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+uv run comenius render fixtures/lessons/es-0001.json --provider kokoro
+```
+
+Or a paid voice provider (see `comenius.example.toml` for voices):
 
 ```sh
 AZURE_SPEECH_KEY=... uv run comenius render fixtures/lessons/es-0001.json --provider azure

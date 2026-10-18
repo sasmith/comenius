@@ -25,6 +25,9 @@ dev = [
     "ruff>=0.17.1",
 ]
 
+[project.optional-dependencies]
+kokoro = ["kokoro-onnx>=0.4"]
+
 [project.scripts]
 comenius = "comenius.cli:app"
 

@@ -160,6 +160,41 @@ class ElevenLabsProvider:
         return _pcm_to_wav(r.content)
 
 
+KOKORO_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
+KOKORO_LANGS = {"en": "en-us", "es": "es", "fr": "fr-fr", "it": "it", "pt": "pt-br"}
+
+
+class KokoroProvider:
+    """Open-weights neural TTS that runs locally (pip install 'comenius[kokoro]')."""
+
+    name = "kokoro"
+
+    def __init__(self, model_dir: Path) -> None:
+        model_dir = Path(os.path.expanduser(str(model_dir)))
+        model, voices = model_dir / "kokoro-v1.0.onnx", model_dir / "voices-v1.0.bin"
+        if not (model.exists() and voices.exists()):
+            raise TTSError(
+                f"Kokoro model files not found in {model_dir}. Download them with:\n"
+                f"  mkdir -p {model_dir} && cd {model_dir} && "
+                f"curl -LO {KOKORO_URL}/kokoro-v1.0.onnx -LO {KOKORO_URL}/voices-v1.0.bin"
+            )
+        try:
+            from kokoro_onnx import Kokoro
+        except ImportError:
+            raise TTSError("Install the kokoro extra: uv sync --extra kokoro") from None
+        self.model = "kokoro-v1.0"
+        self.kokoro = Kokoro(str(model), str(voices))
+
+    def synthesize(self, text: str, voice: str, lang: str, rate: float) -> bytes:
+        import numpy as np
+
+        samples, sr = self.kokoro.create(
+            text, voice=voice, speed=rate, lang=KOKORO_LANGS.get(lang, lang)
+        )
+        pcm = (np.clip(samples, -1.0, 1.0) * 32767).astype("<i2").tobytes()
+        return _pcm_to_wav(pcm, sr)
+
+
 def make_provider(cfg: TTSConfig, name: str | None = None) -> TTSProvider:
     name = name or cfg.provider
     if name == "espeak":
@@ -170,6 +205,8 @@ def make_provider(cfg: TTSConfig, name: str | None = None) -> TTSProvider:
         return AzureProvider(cfg.azure_region)
     if name == "elevenlabs":
         return ElevenLabsProvider(cfg.elevenlabs_model)
+    if name == "kokoro":
+        return KokoroProvider(cfg.kokoro_dir)
     raise TTSError(f"Unknown TTS provider {name!r}")
 
 

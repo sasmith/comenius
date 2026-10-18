@@ -30,6 +30,14 @@ DEFAULT_VOICES: dict[str, dict[str, str]] = {
         "female_2": "shimmer",
         "male_2": "echo",
     },
+    # Local neural voices; Spanish has one female (ef_dora) and two male voices.
+    "kokoro": {
+        "narrator": "af_heart",
+        "female_1": "ef_dora",
+        "male_1": "em_alex",
+        "female_2": "ef_dora",
+        "male_2": "em_santa",
+    },
     # ElevenLabs voice ids are account-specific; fill these in comenius.toml.
     "elevenlabs": {},
 }
@@ -69,6 +77,7 @@ class TTSConfig(BaseModel):
     openai_model: str = "gpt-4o-mini-tts"
     azure_region: str = "westus2"
     elevenlabs_model: str = "eleven_multilingual_v2"
+    kokoro_dir: Path = Path("~/.cache/comenius/kokoro")
 
     def voice_map(self, provider: str | None = None) -> dict[str, str]:
         name = provider or self.provider
