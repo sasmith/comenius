@@ -13,11 +13,12 @@ flashcards, and lessons can be published as a private podcast feed.
 
 ## Setup
 
-Requires Python 3.12+, [uv](https://docs.astral.sh/uv/), and ffmpeg. For free
-offline speech (robotic, but fine for testing pacing) install espeak-ng.
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/). ffmpeg comes bundled
+(a system ffmpeg is used if present). The default offline voice needs espeak-ng;
+the Kokoro voices below don't.
 
 ```sh
-brew install ffmpeg espeak-ng        # or: apt install ffmpeg espeak-ng
+brew install espeak-ng               # or: apt install espeak-ng (only for --provider espeak)
 uv sync
 ```
 

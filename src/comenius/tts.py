@@ -14,15 +14,23 @@ import shutil
 import subprocess
 import tempfile
 import wave
+from functools import cache
 from pathlib import Path
 from typing import Protocol
 from xml.sax.saxutils import escape
 
 import httpx
+import imageio_ffmpeg
 
 from .config import TTSConfig
 
 SAMPLE_RATE = 24_000
+
+
+@cache
+def ffmpeg_exe() -> str:
+    """System ffmpeg if installed, else the static binary bundled with imageio-ffmpeg."""
+    return shutil.which("ffmpeg") or imageio_ffmpeg.get_ffmpeg_exe()
 
 
 class TTSError(RuntimeError):
@@ -231,7 +239,7 @@ def normalize_audio(raw: bytes, out: Path) -> None:
     try:
         result = subprocess.run(
             [
-                "ffmpeg", "-y", "-loglevel", "error", "-i", src,
+                ffmpeg_exe(), "-y", "-loglevel", "error", "-i", src,
                 "-af", _TRIM, "-ar", str(SAMPLE_RATE), "-ac", "1", "-sample_fmt", "s16",
                 str(out),
             ],
