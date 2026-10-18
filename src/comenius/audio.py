@@ -8,7 +8,7 @@ import wave
 from pathlib import Path
 
 from .schema import Timeline
-from .tts import SAMPLE_RATE, ClipCache, TTSError
+from .tts import SAMPLE_RATE, ClipCache, TTSError, ffmpeg_exe
 
 BYTES_PER_SAMPLE = 2
 
@@ -87,7 +87,7 @@ def render_mp3(
         meta.write_text(chapter_metadata(timeline, total, title, artist), encoding="utf-8")
         result = subprocess.run(
             [
-                "ffmpeg", "-y", "-loglevel", "error",
+                ffmpeg_exe(), "-y", "-loglevel", "error",
                 "-i", str(wav), "-i", str(meta),
                 "-map", "0:a", "-map_metadata", "1", "-map_chapters", "1",
                 "-af", "loudnorm=I=-16:TP=-1.5:LRA=11",
@@ -110,7 +110,7 @@ def clip_to_mp3(clip: Path, out: Path, bitrate: str = "48k") -> None:
         return
     out.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-loglevel", "error", "-i", str(clip),
+        [ffmpeg_exe(), "-y", "-loglevel", "error", "-i", str(clip),
          "-c:a", "libmp3lame", "-b:a", bitrate, str(out)],
         check=True,
     )  # fmt: skip
