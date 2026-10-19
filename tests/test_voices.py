@@ -1,7 +1,6 @@
 import io
 import json
 import shutil
-import wave
 
 import pytest
 
@@ -71,10 +70,10 @@ class FakePolly:
 def test_polly_requests():
     provider = PollyProvider.__new__(PollyProvider)
     provider.engine, provider.client = "generative", FakePolly()
-    wav = provider.synthesize("Necesito arreglar mi bicicleta.", "Mia", "es", 1.0)
-    with wave.open(io.BytesIO(wav)) as w:
-        assert w.getframerate() == 24000
-    assert provider.client.calls[-1]["TextType"] == "text"
+    provider.synthesize("Necesito arreglar mi bicicleta.", "Mia", "es", 1.0)
+    call = provider.client.calls[-1]
+    # Polly accepts only 8000/16000 for PCM, so ask for 24 kHz MP3.
+    assert (call["OutputFormat"], call["SampleRate"], call["TextType"]) == ("mp3", "24000", "text")
 
     provider.synthesize("puedo ayudar", "Mia", "es", 0.9)
     assert '<prosody rate="90%">puedo ayudar</prosody>' in provider.client.calls[-1]["Text"]

@@ -276,10 +276,11 @@ class PollyProvider:
             TextType="ssml" if ssml else "text",
             VoiceId=voice,
             Engine=self.engine,
-            OutputFormat="pcm",
+            # Polly's PCM tops out at 16 kHz; MP3 goes to 24 kHz. normalize_audio decodes it.
+            OutputFormat="mp3",
             SampleRate=str(SAMPLE_RATE),
         )
-        return _pcm_to_wav(r["AudioStream"].read())
+        return r["AudioStream"].read()
 
     def synthesize(self, text: str, voice: str, lang: str, rate: float) -> bytes:
         return self._speak(escape(text), voice, rate, ssml=False)
