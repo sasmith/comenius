@@ -8,7 +8,7 @@ from typing import Annotated
 
 import typer
 
-from .config import Config, load_config
+from .config import Config, ConfigError, load_config
 from .schema import LessonScript, LessonSpec
 from .state import LearnerState
 
@@ -168,7 +168,12 @@ def feed(
     from .feed import build_feed
 
     cfg = _cfg(config)
-    path = build_feed(out or cfg.out_dir, cfg.feed.site_dir, cfg.feed)
+    try:
+        base = cfg.feed.public_url()
+    except ConfigError as e:
+        typer.echo(str(e))
+        raise typer.Exit(1) from None
+    path = build_feed(out or cfg.out_dir, cfg.feed.site_dir, cfg.feed, base)
     typer.echo(f"Wrote {path}")
 
 
@@ -177,7 +182,7 @@ def _publish(cfg: Config, out: Path | None = None) -> None:
 
     try:
         result = publish(out or cfg.out_dir, cfg.feed)
-    except PublishError as e:
+    except (PublishError, ConfigError) as e:
         typer.echo(str(e))
         raise typer.Exit(1) from None
     typer.echo(f"Uploaded {len(result.uploaded)} file(s), {len(result.unchanged)} unchanged.")

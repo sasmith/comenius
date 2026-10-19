@@ -50,9 +50,14 @@ def _md5(path: Path) -> str:
 
 def publish(out_dir: Path, cfg: FeedConfig, client: Any | None = None) -> PublishResult:
     if not cfg.bucket:
-        raise PublishError("Set [feed] bucket (and base_url, prefix) in comenius.toml")
-    feed = build_feed(out_dir, cfg.site_dir, cfg)
+        raise PublishError("Set [feed] bucket and prefix in comenius.toml")
     s3 = client or _client(cfg)
+    region = cfg.region
+    if not (cfg.base_url or cfg.endpoint_url or region):
+        # LocationConstraint is None for us-east-1. Needs s3:GetBucketLocation.
+        region = s3.get_bucket_location(Bucket=cfg.bucket)["LocationConstraint"] or "us-east-1"
+    base = cfg.public_url(region)
+    feed = build_feed(out_dir, cfg.site_dir, cfg, base)
     prefix = cfg.prefix.strip("/")
 
     remote: dict[str, str] = {}
@@ -62,7 +67,7 @@ def publish(out_dir: Path, cfg: FeedConfig, client: Any | None = None) -> Publis
         for obj in page.get("Contents", []):
             remote[obj["Key"]] = obj["ETag"].strip('"')
 
-    result = PublishResult(feed_url=f"{cfg.base_url.rstrip('/')}/feed.xml")
+    result = PublishResult(feed_url=f"{base}/feed.xml")
     files = sorted(p for p in cfg.site_dir.iterdir() if p.is_file() and p != feed) + [feed]
     for path in files:
         key = f"{prefix}/{path.name}" if prefix else path.name

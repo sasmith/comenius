@@ -37,7 +37,7 @@ def test_render_all_outputs(script, tmp_path):
         names = z.namelist()
     assert "media" in names and any(n.startswith("collection") for n in names)
 
-    feed = build_feed(cfg.out_dir, tmp_path / "site", cfg.feed)
+    feed = build_feed(cfg.out_dir, tmp_path / "site", cfg.feed, "https://cdn.example/x")
     xml = feed.read_text()
     assert "es-0001.mp3" in xml and "<itunes:duration>" in xml
     assert (tmp_path / "site" / "es-0001.mp3").exists()

@@ -121,14 +121,16 @@ it to an S3 bucket, sending only files that changed and the feed last.
    ```toml
    [feed]
    bucket = "comenius-<you>"
-   region = "us-east-1"
    prefix = "<random prefix>"
-   base_url = "https://comenius-<you>.s3.us-east-1.amazonaws.com/<random prefix>"
    ```
 
+   The public URL is built from these as
+   `https://<bucket>.s3.<region>.amazonaws.com/<prefix>`, with the region looked up from
+   the bucket (or set `region` to skip the lookup).
+
 4. `uv sync --extra aws`, then `uv run comenius publish` with your usual AWS credentials
-   (`AWS_PROFILE` or access keys; the IAM user needs `s3:PutObject` and `s3:ListBucket`
-   on the bucket). Subscribe to the printed feed URL in your podcast app (Overcast and
+   (`AWS_PROFILE` or access keys; the IAM user needs `s3:PutObject`, `s3:ListBucket`, and
+   `s3:GetBucketLocation` on the bucket). Subscribe to the printed feed URL in your podcast app (Overcast and
    Pocket Casts accept a URL; in Apple Podcasts use "Follow a Show by URL").
 
 Anyone with the URL can download the lessons, so keep the prefix private. To keep the

@@ -98,6 +98,10 @@ DEFAULT_NARRATORS = [
 ]
 
 
+class ConfigError(ValueError):
+    pass
+
+
 class LessonConfig(BaseModel):
     pause_multiplier: float = Field(1.0, description="Global scale on learner pauses.")
     pause_answer_factor: float = 1.5
@@ -171,9 +175,11 @@ class FeedConfig(BaseModel):
     title: str = "Comenius"
     description: str = "Generated audio language lessons."
     author: str = ""
-    base_url: str = Field(
-        "https://example.com/comenius",
-        description="Public URL of the uploaded site; the feed is base_url/feed.xml.",
+    base_url: str | None = Field(
+        None,
+        description="Public URL of the uploaded site; the feed is base_url/feed.xml. Leave unset "
+        "for AWS S3 (derived from bucket, region, prefix); set it for R2, CloudFront, or a "
+        "custom domain.",
     )
     site_dir: Path = Path("site")
     # Upload target (S3, or S3-compatible such as Cloudflare R2). Credentials come from
@@ -181,7 +187,19 @@ class FeedConfig(BaseModel):
     bucket: str = ""
     prefix: str = Field("", description="Key prefix; use a long random string for privacy.")
     endpoint_url: str | None = Field(None, description="For R2/MinIO; omit for AWS S3.")
-    region: str | None = None
+    region: str | None = Field(None, description="Bucket region; `publish` looks it up if unset.")
+
+    def public_url(self, region: str | None = None) -> str:
+        """base_url, else the AWS S3 virtual-hosted URL of bucket/prefix."""
+        if self.base_url:
+            return self.base_url.rstrip("/")
+        if self.endpoint_url:
+            raise ConfigError("Set [feed] base_url (the public URL) when using endpoint_url.")
+        region = region or self.region
+        if not (self.bucket and region):
+            raise ConfigError("Set [feed] bucket and region, or base_url, in comenius.toml.")
+        prefix = self.prefix.strip("/")
+        return f"https://{self.bucket}.s3.{region}.amazonaws.com" + (f"/{prefix}" if prefix else "")
 
 
 class Config(BaseModel):

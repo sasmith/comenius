@@ -75,3 +75,22 @@ def test_publish_uploads_changed_files_and_feed_last(script, tmp_path):
 
     second = publish(cfg.out_dir, feed_cfg, client=s3)
     assert "abc123/es-0001.mp3" in second.unchanged
+
+
+@mock_aws
+def test_publish_derives_public_url_from_bucket_region_and_prefix(script, tmp_path):
+    from comenius.config import Config, TTSConfig
+
+    cfg = Config(out_dir=tmp_path / "out", tts=TTSConfig(cache_dir=tmp_path / "cache"))
+    render_lesson(script, cfg, provider="espeak", pdf=False, anki=False)
+    s3 = boto3.client("s3", region_name="us-east-2")
+    s3.create_bucket(
+        Bucket="lessons", CreateBucketConfiguration={"LocationConstraint": "us-east-2"}
+    )
+    feed_cfg = FeedConfig(bucket="lessons", prefix="abc123", site_dir=tmp_path / "site")
+
+    result = publish(cfg.out_dir, feed_cfg, client=s3)  # region looked up from the bucket
+    base = "https://lessons.s3.us-east-2.amazonaws.com/abc123"
+    assert result.feed_url == f"{base}/feed.xml"
+    feed = s3.get_object(Bucket="lessons", Key="abc123/feed.xml")["Body"].read().decode()
+    assert f'<enclosure url="{base}/es-0001.mp3"' in feed

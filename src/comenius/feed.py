@@ -2,7 +2,7 @@
 
 Upload the resulting directory to any static host under a hard-to-guess path
 (e.g. `aws s3 sync site/ s3://bucket/<random>/` or `rclone sync`), then
-subscribe to <base_url>/feed.xml in a podcast app.
+subscribe to <public url>/feed.xml in a podcast app.
 """
 
 from __future__ import annotations
@@ -31,9 +31,9 @@ def _lessons(out_dir: Path) -> list[tuple[dict, Path]]:
     return found
 
 
-def build_feed(out_dir: Path, site_dir: Path, cfg: FeedConfig) -> Path:
+def build_feed(out_dir: Path, site_dir: Path, cfg: FeedConfig, base: str) -> Path:
+    """`base` is the public URL the site is served from (see FeedConfig.public_url)."""
     site_dir.mkdir(parents=True, exist_ok=True)
-    base = cfg.base_url.rstrip("/")
     items: list[str] = []
     for meta, lesson_dir in _lessons(out_dir):
         lid = meta["id"]

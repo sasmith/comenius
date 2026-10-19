@@ -69,9 +69,11 @@ description = "Generated audio Spanish lessons."
 site_dir = "site"
 # Upload target for `comenius publish`: an S3 bucket (see README for the bucket policy).
 bucket = ""
-region = "us-east-1"
 prefix = ""                   # long random string; the feed URL is the only "password"
-base_url = "https://<bucket>.s3.us-east-1.amazonaws.com/<prefix>"   # public URL of bucket/prefix
-# S3-compatible stores such as Cloudflare R2:
+# region = "us-east-2"        # looked up from the bucket if unset
+# The public URL defaults to https://<bucket>.s3.<region>.amazonaws.com/<prefix>.
+# Set base_url only when it differs (CloudFront, a custom domain, R2):
+# base_url = "https://d111111abcdef8.cloudfront.net/<prefix>"
+# S3-compatible stores such as Cloudflare R2 (base_url required):
 # endpoint_url = "https://<account-id>.r2.cloudflarestorage.com"
 # base_url = "https://pub-xxxx.r2.dev/<prefix>"
