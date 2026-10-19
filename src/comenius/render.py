@@ -10,7 +10,8 @@ from pathlib import Path
 from .config import Config
 from .schema import LessonScript, Timeline
 from .sequence import build_timeline
-from .tts import ClipCache, TTSProvider, make_provider
+from .tts import ClipCache
+from .voices import cast_for
 
 
 @dataclass
@@ -45,7 +46,7 @@ def render_lesson(
     script: LessonScript,
     cfg: Config,
     *,
-    provider: TTSProvider | str | None = None,
+    provider: str | None = None,
     mp3: bool = True,
     pdf: bool = True,
     anki: bool = True,
@@ -54,9 +55,8 @@ def render_lesson(
     lesson_dir = (out_dir or cfg.out_dir) / script.id
     lesson_dir.mkdir(parents=True, exist_ok=True)
 
-    if isinstance(provider, str) or provider is None:
-        provider = make_provider(cfg.tts, provider)
-    cache = ClipCache(cfg.tts, provider)
+    cast = cast_for(script, cfg.tts, provider)
+    cache = ClipCache(cfg.tts, cast)
 
     # Durations come from real (cached) TTS clips, so pauses fit the actual audio.
     timeline = build_timeline(script, cfg.lesson, cache.duration)
@@ -97,7 +97,7 @@ def render_lesson(
         "duration_s": timeline.duration_s,
         "learner_pause_s": round(timeline.learner_pause_s(), 1),
         "chapters": [c.model_dump() for c in timeline.chapters],
-        "tts_provider": provider.name,
+        "voices": {role: str(ref) for role, ref in cast.items()},
         "rendered_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "files": sorted(result.files),
     }

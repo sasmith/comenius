@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -38,9 +39,63 @@ DEFAULT_VOICES: dict[str, dict[str, str]] = {
         "female_2": "ef_dora",
         "male_2": "em_santa",
     },
+    # Amazon Polly ids are ASCII (Andres, not Andrés).
+    "polly": {
+        "narrator": "Ruth",
+        "female_1": "Mia",
+        "male_1": "Andres",
+        "female_2": "Lupe",
+        "male_2": "Pedro",
+    },
     # ElevenLabs voice ids are account-specific; fill these in comenius.toml.
     "elevenlabs": {},
 }
+
+
+class PoolVoice(BaseModel):
+    """A native voice the pool may cast as a dialog speaker."""
+
+    provider: str
+    voice: str
+    lang: str
+    gender: Literal["female", "male"]
+    accent: str = ""  # informational, e.g. es-MX
+
+
+# Native Latin American Spanish voices from the paid providers. Kokoro and OpenAI are
+# left out by default: their Spanish can carry a non-native accent.
+DEFAULT_POOL = [
+    PoolVoice(provider="polly", voice="Mia", lang="es", gender="female", accent="es-MX"),
+    PoolVoice(provider="polly", voice="Andres", lang="es", gender="male", accent="es-MX"),
+    PoolVoice(provider="polly", voice="Lupe", lang="es", gender="female", accent="es-US"),
+    PoolVoice(provider="polly", voice="Pedro", lang="es", gender="male", accent="es-US"),
+    PoolVoice(
+        provider="azure", voice="es-MX-DaliaNeural", lang="es", gender="female", accent="es-MX"
+    ),
+    PoolVoice(
+        provider="azure", voice="es-MX-JorgeNeural", lang="es", gender="male", accent="es-MX"
+    ),
+    PoolVoice(
+        provider="azure", voice="es-MX-RenataNeural", lang="es", gender="female", accent="es-MX"
+    ),
+    PoolVoice(
+        provider="azure", voice="es-MX-LibertoNeural", lang="es", gender="male", accent="es-MX"
+    ),
+    PoolVoice(
+        provider="azure", voice="es-US-PalomaNeural", lang="es", gender="female", accent="es-US"
+    ),
+    PoolVoice(
+        provider="azure", voice="es-US-AlonsoNeural", lang="es", gender="male", accent="es-US"
+    ),
+]
+
+# English narrator, first available wins. Kept stable across lessons on purpose.
+DEFAULT_NARRATORS = [
+    "polly:Ruth",
+    "azure:en-US-AndrewMultilingualNeural",
+    "kokoro:af_heart",
+    "espeak:en-us",
+]
 
 
 class LessonConfig(BaseModel):
@@ -71,7 +126,18 @@ class LessonConfig(BaseModel):
 
 
 class TTSConfig(BaseModel):
-    provider: str = "espeak"
+    provider: str = Field(
+        "espeak",
+        description="espeak, kokoro, polly, azure, openai, elevenlabs, or 'pool' to cast each "
+        "lesson's speakers from `pool` across providers.",
+    )
+    pool: list[PoolVoice] = Field(default_factory=lambda: list(DEFAULT_POOL))
+    narrators: list[str] = Field(
+        default_factory=lambda: list(DEFAULT_NARRATORS),
+        description="'provider:voice' narrator preferences for pool mode; first available wins.",
+    )
+    polly_engine: str = "generative"
+    polly_region: str = "us-east-1"
     cache_dir: Path = Path(".cache/tts")
     voices: dict[str, dict[str, str]] = Field(default_factory=dict)
     openai_model: str = "gpt-4o-mini-tts"

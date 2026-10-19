@@ -11,11 +11,11 @@ with the least code. Each milestone ends with something to listen to.
 | Milestone | State | Notes |
 |---|---|---|
 | M0 Scaffold | Done | uv, Typer CLI, ruff, pytest, CI |
-| M1 Lesson → MP3 | Done, pending real-voice bake-off | Sequencer, TTS providers (espeak, Kokoro, Azure, OpenAI, ElevenLabs), clip cache, MP3 with chapters. espeak and Kokoro are tested end to end; the paid providers need keys to verify. |
+| M1 Lesson → MP3 | Done, pending real-voice bake-off | Sequencer, TTS providers (espeak, Kokoro, Polly, Azure, OpenAI, ElevenLabs), clip cache, MP3 with chapters. Voice pool casts each lesson's speakers across providers for accent variety. espeak and Kokoro are tested end to end; the paid providers need keys to verify. |
 | M2 LLM generation | Done, untested against the live API | Forced tool-call JSON, code checks, native-speaker review pass, regeneration loop, cache. Loop is tested with a fake client. |
 | M3 Curriculum constraints | Partial | Syllabus done (`src/comenius/data/syllabus/es.yaml`, 59 points A1→B1, `comenius syllabus`), used by generation and validation. Still to do: spaCy lemmatization, frequency bands, planner. |
 | M4 PDF + Anki | Done | Typst PDF with answer page; genanki deck with stable GUIDs and audio. |
-| M5 Podcast feed | Done | `comenius publish` uploads changed files to S3/R2 (feed last); `generate --publish`. Tested against a mock S3; not yet against a real bucket. |
+| M5 Podcast feed | Done | `comenius publish` uploads changed files to S3 (or R2; feed last); `generate --publish`. Tested against a mock S3; not yet against a real bucket. |
 | M6 Learner state | Partial | SQLite state (`comenius state add/show/assume`), lesson-count review schedule, and `comenius plan` (next syllabus point + known words + due reviews). Still to do: Anki review signal, lemmatized word tracking. |
 | M7 Target-book mode | Not started | |
 

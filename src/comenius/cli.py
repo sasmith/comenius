@@ -39,7 +39,10 @@ def _mmss(s: float) -> str:
 def render(
     lessons: Annotated[list[Path], typer.Argument(help="Lesson script JSON file(s).")],
     provider: Annotated[
-        str | None, typer.Option(help="TTS provider: espeak, azure, openai, elevenlabs.")
+        str | None,
+        typer.Option(
+            help="espeak, kokoro, polly, azure, openai, elevenlabs, or pool (mix providers)."
+        ),
     ] = None,
     out: Annotated[Path | None, typer.Option(help="Output directory.")] = None,
     mp3: bool = True,

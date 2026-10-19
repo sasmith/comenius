@@ -40,7 +40,7 @@ def _client(cfg: FeedConfig) -> Any:
     try:
         import boto3
     except ImportError:
-        raise PublishError("Install the publish extra: uv sync --extra publish") from None
+        raise PublishError("Install the aws extra: uv sync --extra aws") from None
     return boto3.client("s3", endpoint_url=cfg.endpoint_url, region_name=cfg.region)
 
 

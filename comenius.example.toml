@@ -18,11 +18,31 @@ signposts = true              # "Dialog. Repeat to learn.", "Substitution drills
 guideposts = false            # "Now the whole line.", section instructions, "How do you say: ..."
 
 [tts]
-provider = "espeak"           # espeak (offline, robotic), kokoro (local neural), azure, openai, elevenlabs
+provider = "espeak"           # espeak (offline, robotic), kokoro (local neural), polly, azure,
+                              # openai, elevenlabs, or "pool" (mix native voices across providers)
 cache_dir = ".cache/tts"
+polly_engine = "generative"   # or "neural"
+polly_region = "us-east-1"
 azure_region = "westus2"      # or AZURE_SPEECH_REGION
 openai_model = "gpt-4o-mini-tts"
 kokoro_dir = "~/.cache/comenius/kokoro"
+
+# Pool mode: each lesson's speakers are drawn from these voices (providers without
+# credentials are skipped); the choice is seeded by lesson id. Setting `pool` replaces
+# the default list (Polly Mia/Andres/Lupe/Pedro and six Azure es-MX/es-US voices).
+# narrators = ["polly:Ruth", "azure:en-US-AndrewMultilingualNeural", "kokoro:af_heart", "espeak:en-us"]
+# [[tts.pool]]
+# provider = "polly"
+# voice = "Mia"
+# lang = "es"
+# gender = "female"
+# accent = "es-MX"
+# [[tts.pool]]
+# provider = "azure"
+# voice = "es-MX-JorgeNeural"
+# lang = "es"
+# gender = "male"
+# accent = "es-MX"
 
 # Override voices per provider (roles: narrator, female_1, male_1, female_2, male_2)
 # [tts.voices.azure]
@@ -47,9 +67,11 @@ queue_words_per_lesson = 3    # queued words required per planned lesson
 title = "Comenius: Spanish"
 description = "Generated audio Spanish lessons."
 site_dir = "site"
-# Upload target for `comenius publish` (S3 or S3-compatible such as Cloudflare R2).
+# Upload target for `comenius publish`: an S3 bucket (see README for the bucket policy).
 bucket = ""
+region = "us-east-1"
 prefix = ""                   # long random string; the feed URL is the only "password"
-base_url = "https://pub-xxxx.r2.dev/<prefix>"   # public URL of bucket/prefix
-# endpoint_url = "https://<account-id>.r2.cloudflarestorage.com"   # R2 only
-# region = "us-east-1"        # AWS S3 only
+base_url = "https://<bucket>.s3.us-east-1.amazonaws.com/<prefix>"   # public URL of bucket/prefix
+# S3-compatible stores such as Cloudflare R2:
+# endpoint_url = "https://<account-id>.r2.cloudflarestorage.com"
+# base_url = "https://pub-xxxx.r2.dev/<prefix>"

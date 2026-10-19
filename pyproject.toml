@@ -29,7 +29,7 @@ dev = [
 
 [project.optional-dependencies]
 kokoro = ["kokoro-onnx>=0.4"]
-publish = ["boto3>=1.35"]
+aws = ["boto3>=1.35"]  # S3 publishing and Polly voices
 
 [project.scripts]
 comenius = "comenius.cli:app"

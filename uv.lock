@@ -366,11 +366,11 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+aws = [
+    { name = "boto3" },
+]
 kokoro = [
     { name = "kokoro-onnx" },
-]
-publish = [
-    { name = "boto3" },
 ]
 
 [package.dev-dependencies]
@@ -383,7 +383,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", specifier = ">=1.15.0" },
-    { name = "boto3", marker = "extra == 'publish'", specifier = ">=1.35" },
+    { name = "boto3", marker = "extra == 'aws'", specifier = ">=1.35" },
     { name = "genanki", specifier = ">=0.13.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "imageio-ffmpeg", specifier = ">=0.6.0" },
@@ -393,7 +393,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.27.3" },
     { name = "typst", specifier = ">=0.15.0" },
 ]
-provides-extras = ["kokoro", "publish"]
+provides-extras = ["kokoro", "aws"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -23,6 +23,7 @@ from xml.sax.saxutils import escape
 
 import httpx
 import imageio_ffmpeg
+from pydantic import BaseModel
 
 from .config import TTSConfig
 
@@ -159,7 +160,7 @@ class AzureProvider:
         )
         return self._post(ssml)
 
-    def synthesize_runs(self, runs: list[Run], voice: str, rate: float) -> bytes:
+    def synthesize_runs(self, runs: list[Run], voice: str, rate: float, lang: str) -> bytes:
         """One request; foreign runs wrapped in <lang> (needs a Multilingual voice)."""
         locale = "-".join(voice.split("-")[:2])
         pct = f"{round((rate - 1.0) * 100):+d}%"
@@ -252,6 +253,45 @@ class KokoroProvider:
         return _pcm_to_wav(pcm, sr)
 
 
+class PollyProvider:
+    """Amazon Polly. Credentials from the usual AWS environment/profile (needs boto3)."""
+
+    name = "polly"
+
+    def __init__(self, engine: str, region: str) -> None:
+        try:
+            import boto3
+        except ImportError:
+            raise TTSError("Polly needs boto3: uv sync --extra aws") from None
+        self.engine = engine
+        self.model = f"polly-{engine}"
+        self.client = boto3.client("polly", region_name=region)
+
+    def _speak(self, body: str, voice: str, rate: float, ssml: bool) -> bytes:
+        if rate != 1.0:
+            body = f'<prosody rate="{round(rate * 100)}%">{body}</prosody>'
+            ssml = True
+        r = self.client.synthesize_speech(
+            Text=f"<speak>{body}</speak>" if ssml else body,
+            TextType="ssml" if ssml else "text",
+            VoiceId=voice,
+            Engine=self.engine,
+            OutputFormat="pcm",
+            SampleRate=str(SAMPLE_RATE),
+        )
+        return _pcm_to_wav(r["AudioStream"].read())
+
+    def synthesize(self, text: str, voice: str, lang: str, rate: float) -> bytes:
+        return self._speak(escape(text), voice, rate, ssml=False)
+
+    def synthesize_runs(self, runs: list[Run], voice: str, rate: float, lang: str) -> bytes:
+        body = "".join(
+            escape(t) if lg == lang else f'<lang xml:lang="{lg}">{escape(t)}</lang>'
+            for t, lg in runs
+        )
+        return self._speak(body, voice, rate, ssml=True)
+
+
 def make_provider(cfg: TTSConfig, name: str | None = None) -> TTSProvider:
     name = name or cfg.provider
     if name == "espeak":
@@ -264,6 +304,8 @@ def make_provider(cfg: TTSConfig, name: str | None = None) -> TTSProvider:
         return ElevenLabsProvider(cfg.elevenlabs_model)
     if name == "kokoro":
         return KokoroProvider(cfg.kokoro_dir)
+    if name == "polly":
+        return PollyProvider(cfg.polly_engine, cfg.polly_region)
     raise TTSError(f"Unknown TTS provider {name!r}")
 
 
@@ -301,34 +343,53 @@ def normalize_audio(raw: bytes, out: Path) -> None:
         os.unlink(src)
 
 
-class ClipCache:
-    """Synthesizes clips on demand, keyed by a hash of everything that affects audio."""
+class VoiceRef(BaseModel):
+    """A concrete voice: which provider, and that provider's voice id."""
 
-    def __init__(self, cfg: TTSConfig, provider: TTSProvider | None = None) -> None:
+    provider: str
+    voice: str
+
+    def __str__(self) -> str:
+        return f"{self.provider}:{self.voice}"
+
+
+class ClipCache:
+    """Synthesizes clips on demand, keyed by a hash of everything that affects audio.
+
+    `cast` maps each voice role (narrator, female_1, ...) to a provider and voice, so
+    one lesson can mix providers. Providers are created on first use.
+    """
+
+    def __init__(self, cfg: TTSConfig, cast: dict[str, VoiceRef]) -> None:
         self.cfg = cfg
-        self.provider = provider or make_provider(cfg)
-        self.voices = cfg.voice_map(self.provider.name)
-        self.dir = Path(cfg.cache_dir) / self.provider.name
-        self.dir.mkdir(parents=True, exist_ok=True)
+        self.cast = cast
+        self._providers: dict[str, TTSProvider] = {}
         self.synthesized = 0
         self.hits = 0
 
-    def voice_for(self, role: str) -> str:
+    def voice_ref(self, role: str) -> VoiceRef:
         try:
-            return self.voices[role]
+            return self.cast[role]
         except KeyError:
-            raise TTSError(
-                f"No {self.provider.name} voice configured for role {role!r}; "
-                f"set [tts.voices.{self.provider.name}] in comenius.toml"
-            ) from None
+            raise TTSError(f"No voice cast for role {role!r}") from None
+
+    def provider_for(self, role: str) -> TTSProvider:
+        name = self.voice_ref(role).provider
+        if name not in self._providers:
+            self._providers[name] = make_provider(self.cfg, name)
+        return self._providers[name]
+
+    def voice_for(self, role: str) -> str:
+        return self.voice_ref(role).voice
 
     def key(
         self, role: str, lang: str, text: str, rate: float, terms: Sequence[str], term_lang: str
     ) -> str:
+        provider = self.provider_for(role)
         payload = json.dumps(
             {
-                "provider": self.provider.name,
-                "model": getattr(self.provider, "model", None),
+                "provider": provider.name,
+                "model": getattr(provider, "model", None),
                 "voice": self.voice_for(role),
                 "lang": lang,
                 "rate": round(rate, 3),
@@ -355,21 +416,23 @@ class ClipCache:
         Providers that take a language per call (Kokoro, espeak) synthesize each run
         in the same voice and the runs are spliced. Others ignore `terms`.
         """
+        provider = self.provider_for(role)
         runs = language_runs(text, lang, terms, term_lang)
         if len(runs) == 1 or not (
-            hasattr(self.provider, "synthesize_runs")
-            or getattr(self.provider, "per_run_language", False)
+            hasattr(provider, "synthesize_runs") or getattr(provider, "per_run_language", False)
         ):
             terms = ()
-        path = self.dir / f"{self.key(role, lang, text, rate, terms, term_lang)}.wav"
+        folder = Path(self.cfg.cache_dir) / provider.name
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / f"{self.key(role, lang, text, rate, terms, term_lang)}.wav"
         if path.exists():
             self.hits += 1
             return path
         tmp = path.with_suffix(".tmp.wav")
         if not terms:
-            normalize_audio(self.provider.synthesize(text, self.voice_for(role), lang, rate), tmp)
-        elif hasattr(self.provider, "synthesize_runs"):
-            normalize_audio(self.provider.synthesize_runs(runs, self.voice_for(role), rate), tmp)
+            normalize_audio(provider.synthesize(text, self.voice_for(role), lang, rate), tmp)
+        elif hasattr(provider, "synthesize_runs"):
+            normalize_audio(provider.synthesize_runs(runs, self.voice_for(role), rate, lang), tmp)
         else:
             # Each run is synthesized on its own (and cached); a comma or period at
             # a join becomes a short pause, otherwise the pieces nearly touch.

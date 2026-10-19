@@ -73,7 +73,7 @@ genders, Swap a word, Say it in Spanish, Review, Listen again):
 
 1. **Intro** (narrator, English): the situation and who's speaking. Speaker
    names and other target-language words in English narration are pronounced
-   natively (Azure: in-sentence language switch; Kokoro/espeak: the same voice
+   natively (Azure and Polly: in-sentence language switch; Kokoro/espeak: the same voice
    reads those words with Spanish pronunciation, spliced in).
 2. **Listen**: the dialog at natural speed, once, in two distinct voices, right
    after the intro with no signpost.
@@ -207,7 +207,7 @@ code makes pacing tunable without regenerating content.
 - *Anki*: genanki package; reuses cached segment audio; stable note GUIDs
   so re-exports update rather than duplicate.
 - *Feed*: static RSS file plus MP3s uploaded to a private, unguessable URL
-  (S3/R2 with a long random path). Subscribe once in Overcast / Apple
+  (S3 with a long random path). Subscribe once in Overcast / Apple
   Podcasts; new lessons appear automatically, including in CarPlay.
 
 **Learner state** — SQLite. See §7.
@@ -320,13 +320,13 @@ SQLite, single learner initially.
 | Language | Python 3.12, `uv` | Ecosystem fit (spaCy, genanki, audio) |
 | CLI | Typer | `comenius plan / generate / render / publish` |
 | LLM | Anthropic API (Claude) | Structured JSON output; separate prompts for generate and review |
-| TTS | Provider interface; start with one of Azure Neural, ElevenLabs, or OpenAI | Pick by Spanish quality and SSML rate control; evaluate in M1 |
+| TTS | Provider interface (Polly, Azure, ElevenLabs, OpenAI, Kokoro, espeak) plus a voice pool | Pool mode casts each lesson's speakers from native voices across providers, so the learner hears many accents rather than imitating one voice; the narrator stays fixed |
 | NLP | spaCy `es_core_news_md` | Lemmatization, POS, proper nouns |
 | Frequency | `wordfreq`, SUBTLEX-ESP | |
 | Audio | ffmpeg + pydub | Concatenation, silence, loudness normalization, chapters |
 | PDF | Typst | Fast, scriptable, good typography |
 | Anki | genanki | Stable GUIDs |
-| Feed hosting | S3 or Cloudflare R2, private random path | Static files only |
+| Feed hosting | AWS S3 (or R2), private random path | Static files only |
 | State | SQLite | |
 | Tests | pytest; golden-file tests for sequencer and renderers | |
 

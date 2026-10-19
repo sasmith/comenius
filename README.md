@@ -46,10 +46,23 @@ uv run comenius render fixtures/lessons/es-0001.json --provider kokoro
 Or a paid voice provider (see `comenius.example.toml` for voices):
 
 ```sh
+uv sync --extra aws && uv run comenius render ... --provider polly   # AWS credentials as usual
 AZURE_SPEECH_KEY=... uv run comenius render fixtures/lessons/es-0001.json --provider azure
 OPENAI_API_KEY=...   uv run comenius render fixtures/lessons/es-0001.json --provider openai
 ELEVENLABS_API_KEY=... uv run comenius render ... --provider elevenlabs  # set voice ids in config
 ```
+
+To hear many native accents rather than one, use the voice pool:
+
+```sh
+uv run comenius render fixtures/lessons/es-0001.json --provider pool   # or provider = "pool" in config
+```
+
+Each lesson casts its speakers from a pool of native Latin American voices
+across Polly and Azure (`tts.pool`), using only providers you have
+credentials for. The choice is seeded by the lesson id, so re-rendering a
+lesson keeps its voices. The English narrator stays the same across lessons:
+the first available entry in `tts.narrators`. `meta.json` records who spoke.
 
 Generate a new lesson from a spec with Claude, then render it:
 
@@ -85,27 +98,46 @@ after 1, 2, 4, 8, then 16 more lessons; each review moves an item to the next in
 ### Publishing to your podcast app
 
 `comenius publish` builds the podcast site (feed, MP3s, PDFs, decks) and uploads
-it to an S3-compatible bucket, sending only files that changed and the feed last.
-Cloudflare R2 works well: free egress and a public `r2.dev` URL.
+it to an S3 bucket, sending only files that changed and the feed last.
 
-1. Create a bucket and an API token with write access to it. Turn on public access
-   (R2: "R2.dev subdomain"; S3: a bucket policy allowing public `GetObject`).
-2. Pick a private prefix: `python -c "import secrets; print(secrets.token_urlsafe(16))"`.
+1. Pick a private prefix: `python -c "import secrets; print(secrets.token_urlsafe(16))"`.
+2. Create a bucket used only for this (e.g. `comenius-<you>`). Under Permissions, turn
+   off "Block public access", then add a bucket policy that makes only the prefix readable:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [{
+       "Effect": "Allow",
+       "Principal": "*",
+       "Action": "s3:GetObject",
+       "Resource": "arn:aws:s3:::comenius-<you>/<random prefix>/*"
+     }]
+   }
+   ```
+
 3. Configure `comenius.toml`:
 
    ```toml
    [feed]
-   bucket = "comenius"
+   bucket = "comenius-<you>"
+   region = "us-east-1"
    prefix = "<random prefix>"
-   base_url = "https://pub-<id>.r2.dev/<random prefix>"
-   endpoint_url = "https://<account-id>.r2.cloudflarestorage.com"   # R2 only
+   base_url = "https://comenius-<you>.s3.us-east-1.amazonaws.com/<random prefix>"
    ```
 
-4. `uv sync --extra publish`, set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, run
-   `uv run comenius publish`, and subscribe to the printed feed URL in your podcast app
-   (Overcast and Pocket Casts accept a URL; in Apple Podcasts use "Follow a Show by URL").
+4. `uv sync --extra aws`, then `uv run comenius publish` with your usual AWS credentials
+   (`AWS_PROFILE` or access keys; the IAM user needs `s3:PutObject` and `s3:ListBucket`
+   on the bucket). Subscribe to the printed feed URL in your podcast app (Overcast and
+   Pocket Casts accept a URL; in Apple Podcasts use "Follow a Show by URL").
 
-Anyone with the URL can download the lessons, so keep the prefix private.
+Anyone with the URL can download the lessons, so keep the prefix private. To keep the
+bucket fully private instead, put CloudFront in front of it with origin access control
+and use the CloudFront domain as `base_url`.
+
+S3-compatible stores work too. For Cloudflare R2, set `endpoint_url =
+"https://<account-id>.r2.cloudflarestorage.com"`, turn on the bucket's public `r2.dev`
+subdomain, and use `https://pub-<id>.r2.dev/<random prefix>` as `base_url`.
 
 Other commands:
 
