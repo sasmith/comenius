@@ -118,7 +118,7 @@ class LessonConfig(BaseModel):
         description="Speed the final 'Listen again' up to this rate per voice (native Spanish "
         "is ~7.8). 0 plays it at the voices' own speed.",
     )
-    max_tempo: float = Field(1.6, description="Cap on the final-listen speed-up.")
+    max_tempo: float = Field(1.2, description="Cap on the final-listen speed-up.")
     gap_s: float = 0.5
     step_gap_s: float = Field(1.5, description="Silence after a drill answer, before the next cue.")
     line_gap_s: float = 0.7

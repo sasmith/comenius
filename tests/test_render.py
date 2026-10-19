@@ -23,17 +23,17 @@ def test_render_all_outputs(script, tmp_path):
     rates = json.loads(result.files["meta.json"].read_text())["syllables_per_s"]
     assert set(rates) == {sp.voice_role for sp in script.speakers}
     assert all(2 < r < 15 for r in rates.values())
-    # The final listen is sped toward 7 syllables/s (espeak is ~4.3, so it hits the 1.6 cap).
+    # The final listen is sped toward 7 syllables/s (espeak is ~4.3, so it hits the 1.2 cap).
     meta = json.loads(result.files["meta.json"].read_text())
     assert set(meta["final_listen_tempo"]) == set(rates)
     assert all(
-        t == min(1.6, round(7.0 / rates[v], 2)) for v, t in meta["final_listen_tempo"].items()
+        t == min(1.2, round(7.0 / rates[v], 2)) for v, t in meta["final_listen_tempo"].items()
     )
     first = {s.text: s.duration_s for s in result.timeline.segments if s.chapter == "Listen"}
     last = [
         s for s in result.timeline.segments if s.chapter == "Listen again" and s.kind == "dialog"
     ]
-    assert all(s.duration_s < first[s.text] / 1.2 for s in last)
+    assert all(s.duration_s < first[s.text] / 1.1 for s in last)
 
     mp3 = result.files["lesson.mp3"]
     probe = subprocess.run(

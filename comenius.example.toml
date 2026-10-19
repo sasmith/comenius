@@ -10,7 +10,7 @@ step_gap_s = 1.5             # silence after a drill answer, before the next cue
 buildup_rate = 0.9            # speaking rate for build-up fragments
 max_buildup_steps = 4
 final_listen_syllables_per_s = 7.0   # speed "Listen again" toward native (~7.8); 0 = voice speed
-max_tempo = 1.6               # cap on that speed-up
+max_tempo = 1.2               # cap on that speed-up (1.6 sounded rushed)
 in_lesson_recall = false      # English-cued recall woven into the lesson (Pimsleur-style)
 recall_intervals_s = [5, 25, 120, 600]
 # English narration (all off by default; recall/translation cues are always English)

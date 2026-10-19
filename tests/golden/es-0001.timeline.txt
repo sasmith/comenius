@@ -173,10 +173,10 @@
   841.54 drill_answer male_1     1.50 Muchas gracias.
   845.61 narration    narrator   1.50 One last listen. Notice how much more you catch now.
   850.82 dialog       male_1     0.70 Buenas tardes. ¿En qué le puedo ayudar?
-  853.26 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
-  856.08 dialog       male_1     0.70 ¿Qué le pasa?
-  857.36 dialog       female_1   0.70 Tiene una llanta ponchada.
-  859.26 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
-  861.52 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
-  864.02 dialog       male_1     0.70 Son cien pesos.
-  865.39 dialog       female_1   0.70 Perfecto. Muchas gracias.
+  853.84 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
+  857.28 dialog       male_1     0.70 ¿Qué le pasa?
+  858.75 dialog       female_1   0.70 Tiene una llanta ponchada.
+  861.00 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
+  863.78 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
+  866.81 dialog       male_1     0.70 Son cien pesos.
+  868.40 dialog       female_1   0.70 Perfecto. Muchas gracias.
