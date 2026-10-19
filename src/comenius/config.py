@@ -105,7 +105,17 @@ class FeedConfig(BaseModel):
     title: str = "Comenius"
     description: str = "Generated audio language lessons."
     author: str = ""
-    base_url: str = "https://example.com/comenius"
+    base_url: str = Field(
+        "https://example.com/comenius",
+        description="Public URL of the uploaded site; the feed is base_url/feed.xml.",
+    )
+    site_dir: Path = Path("site")
+    # Upload target (S3, or S3-compatible such as Cloudflare R2). Credentials come from
+    # the usual AWS environment variables or profile.
+    bucket: str = ""
+    prefix: str = Field("", description="Key prefix; use a long random string for privacy.")
+    endpoint_url: str | None = Field(None, description="For R2/MinIO; omit for AWS S3.")
+    region: str | None = None
 
 
 class Config(BaseModel):

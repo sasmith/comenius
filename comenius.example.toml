@@ -46,4 +46,10 @@ queue_words_per_lesson = 3    # queued words required per planned lesson
 [feed]
 title = "Comenius: Spanish"
 description = "Generated audio Spanish lessons."
-base_url = "https://example-bucket.s3.amazonaws.com/some-long-random-path"
+site_dir = "site"
+# Upload target for `comenius publish` (S3 or S3-compatible such as Cloudflare R2).
+bucket = ""
+prefix = ""                   # long random string; the feed URL is the only "password"
+base_url = "https://pub-xxxx.r2.dev/<prefix>"   # public URL of bucket/prefix
+# endpoint_url = "https://<account-id>.r2.cloudflarestorage.com"   # R2 only
+# region = "us-east-1"        # AWS S3 only

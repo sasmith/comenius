@@ -72,7 +72,7 @@ uv run comenius state add fixtures/lessons/es-0001.json  # record lessons you've
 uv run comenius queue add "Navigating the airport" --lessons 3   # things you want to learn
 uv run comenius queue add --words "pasaporte, equipaje, maleta"
 uv run comenius plan                                      # -> specs/es-0002.yaml
-uv run comenius generate specs/es-0002.yaml --render --record
+uv run comenius generate specs/es-0002.yaml --render --record --publish
 uv run comenius state show                                # progress and what's due
 ```
 
@@ -82,13 +82,37 @@ situation in the queue (or `--topic`), and up to three queued words are worked i
 `comenius queue list` shows progress. Items come back for review
 after 1, 2, 4, 8, then 16 more lessons; each review moves an item to the next interval.
 
+### Publishing to your podcast app
+
+`comenius publish` builds the podcast site (feed, MP3s, PDFs, decks) and uploads
+it to an S3-compatible bucket, sending only files that changed and the feed last.
+Cloudflare R2 works well: free egress and a public `r2.dev` URL.
+
+1. Create a bucket and an API token with write access to it. Turn on public access
+   (R2: "R2.dev subdomain"; S3: a bucket policy allowing public `GetObject`).
+2. Pick a private prefix: `python -c "import secrets; print(secrets.token_urlsafe(16))"`.
+3. Configure `comenius.toml`:
+
+   ```toml
+   [feed]
+   bucket = "comenius"
+   prefix = "<random prefix>"
+   base_url = "https://pub-<id>.r2.dev/<random prefix>"
+   endpoint_url = "https://<account-id>.r2.cloudflarestorage.com"   # R2 only
+   ```
+
+4. `uv sync --extra publish`, set `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`, run
+   `uv run comenius publish`, and subscribe to the printed feed URL in your podcast app
+   (Overcast and Pocket Casts accept a URL; in Apple Podcasts use "Follow a Show by URL").
+
+Anyone with the URL can download the lessons, so keep the prefix private.
+
 Other commands:
 
 ```sh
 uv run comenius timeline fixtures/lessons/es-0001.json --full   # preview pacing, no TTS
 uv run comenius validate lessons/es-0002.json --spec examples/specs/es-0002.yaml
-uv run comenius feed --base-url https://<bucket>/<long-random-path>
-aws s3 sync site/ s3://<bucket>/<long-random-path>/          # then subscribe to .../feed.xml
+uv run comenius feed                                          # build the podcast site locally only
 uv run comenius schema script                                 # JSON Schema for lesson scripts
 uv run comenius syllabus --level A1 --full                    # grammar syllabus
 uv run comenius syllabus --known es.a1.greetings,es.a1.present_ar  # what to teach next

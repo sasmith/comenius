@@ -115,6 +115,9 @@ def generate(
     record: Annotated[
         bool, typer.Option(help="Record the lesson in learner state once accepted.")
     ] = False,
+    then_publish: Annotated[
+        bool, typer.Option("--publish", help="Upload the podcast site after rendering.")
+    ] = False,
     config: ConfigOpt = None,
 ) -> None:
     """Generate a lesson script with Claude (needs ANTHROPIC_API_KEY)."""
@@ -147,24 +150,44 @@ def generate(
             raise typer.Exit(1)
         seq = LearnerState(cfg.state.path).record_lesson(script)
         typer.echo(f"  recorded as lesson #{seq} in {cfg.state.path}")
+    if then_publish:
+        if not then_render:
+            raise typer.BadParameter("--publish needs --render")
+        _publish(cfg)
 
 
 @app.command()
 def feed(
-    site: Annotated[Path, typer.Option(help="Output directory for the static site.")] = Path(
-        "site"
-    ),
     out: Annotated[Path | None, typer.Option(help="Rendered lessons directory.")] = None,
-    base_url: Annotated[str | None, typer.Option(help="Public URL of the site directory.")] = None,
     config: ConfigOpt = None,
 ) -> None:
-    """Build a podcast feed (feed.xml + MP3/PDF) from rendered lessons."""
+    """Build the podcast site (feed.xml + MP3/PDF/decks) locally, without uploading."""
     from .feed import build_feed
 
     cfg = _cfg(config)
-    feed_cfg = cfg.feed.model_copy(update={"base_url": base_url} if base_url else {})
-    path = build_feed(out or cfg.out_dir, site, feed_cfg)
-    typer.echo(f"Wrote {path}. Upload {site}/ so that {feed_cfg.base_url}/feed.xml resolves.")
+    path = build_feed(out or cfg.out_dir, cfg.feed.site_dir, cfg.feed)
+    typer.echo(f"Wrote {path}")
+
+
+def _publish(cfg: Config, out: Path | None = None) -> None:
+    from .publish import PublishError, publish
+
+    try:
+        result = publish(out or cfg.out_dir, cfg.feed)
+    except PublishError as e:
+        typer.echo(str(e))
+        raise typer.Exit(1) from None
+    typer.echo(f"Uploaded {len(result.uploaded)} file(s), {len(result.unchanged)} unchanged.")
+    typer.echo(f"Feed: {result.feed_url}")
+
+
+@app.command("publish")
+def publish_cmd(
+    out: Annotated[Path | None, typer.Option(help="Rendered lessons directory.")] = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Build the podcast site and upload it to the bucket set under feed in comenius.toml."""
+    _publish(_cfg(config), out)
 
 
 state_app = typer.Typer(no_args_is_help=True, help="Learner state: lessons done, review schedule.")
