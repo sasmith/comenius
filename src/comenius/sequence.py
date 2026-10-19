@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
 from .config import LessonConfig
@@ -23,9 +23,10 @@ from .schema import (
     TranslationDrill,
     VoiceRole,
 )
+from .tts import terms_in
 
-# (voice, lang, text, rate) -> duration in seconds
-DurationFn = Callable[[str, str, str, float], float]
+# (voice, lang, text, rate, native terms, term lang) -> duration in seconds
+DurationFn = Callable[[str, str, str, float, Sequence[str], str], float]
 
 NARRATOR: VoiceRole = "narrator"
 NARRATOR_LANG = "en"
@@ -34,7 +35,9 @@ _SENTENCE_RE = re.compile(r"[^.?!…]+[.?!…]+|[^.?!…]+$")
 _STRIP_RE = re.compile(r"[¿¡?!.,;:…\"“”«»()]")
 
 
-def estimate_duration(voice: str, lang: str, text: str, rate: float) -> float:
+def estimate_duration(
+    voice: str, lang: str, text: str, rate: float, terms: Sequence[str] = (), term_lang: str = ""
+) -> float:
     """Rough speech-duration estimate (no TTS): ~14 chars/second at rate 1.0."""
     return round(max(0.4, len(text) / 14.0) / max(rate, 0.1), 3)
 
@@ -154,8 +157,15 @@ class _Builder:
         self.current_chapter = title
         self.chapters.append(Chapter(title=title, start_s=round(self.clock, 3)))
 
+    def native(self, lang: str, text: str) -> list[str]:
+        """Names and terms in English narration to pronounce in the lesson's language."""
+        if lang != NARRATOR_LANG:
+            return []
+        return terms_in(text, self.script.native_terms())
+
     def dur(self, voice: str, lang: str, text: str, rate: float = 1.0) -> float:
-        return self.duration_of(voice, lang, text, rate)
+        terms = self.native(lang, text)
+        return self.duration_of(voice, lang, text, rate, terms, self.script.dialect)
 
     def say(
         self,
@@ -168,6 +178,7 @@ class _Builder:
         pause_after: float = 0.0,
     ) -> Segment:
         d = self.dur(voice, lang, text, rate)
+        terms = self.native(lang, text)
         seg = Segment(
             chapter=self.current_chapter,
             kind=kind,
@@ -175,6 +186,8 @@ class _Builder:
             lang=lang,
             text=text,
             rate=rate,
+            terms=terms,
+            term_lang=self.script.dialect if terms else "",
             pause_after_s=round(pause_after, 3),
             start_s=round(self.clock, 3),
             duration_s=d,

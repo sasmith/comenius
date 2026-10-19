@@ -35,7 +35,7 @@ def write_wav(timeline: Timeline, cache: ClipCache, out_wav: Path) -> float:
             if target > written:
                 out.writeframes(_silence((target - written) / SAMPLE_RATE))
                 written = target
-            clip = cache.clip(seg.voice, seg.lang, seg.text, seg.rate)
+            clip = cache.clip(seg.voice, seg.lang, seg.text, seg.rate, seg.terms, seg.term_lang)
             with wave.open(str(clip), "rb") as w:
                 if w.getframerate() != SAMPLE_RATE or w.getnchannels() != 1:
                     raise TTSError(f"Clip {clip} is not normalized")

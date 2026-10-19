@@ -8,6 +8,7 @@ from comenius.sequence import (
     estimate_duration,
     split_sentences,
 )
+from comenius.tts import language_runs
 
 GOLDEN = Path(__file__).parent / "golden" / "es-0001.timeline.txt"
 
@@ -183,3 +184,11 @@ def test_progressive_drill_cues_chain_from_previous_answer(script):
     i = cues.index(("querer", "Quiero una bicicleta."))
     assert cues[i + 1] == ("gato", "Quiero un gato.")
     assert cues[i + 2] == ("algunos", "Quiero algunos gatos.")
+
+
+def test_names_in_english_narration_are_marked_for_native_pronunciation(script):
+    intro = next(s for s in build_timeline(script).segments if s.text == script.setting)
+    assert {"Ana", "Don Luis"} <= set(intro.terms) and intro.term_lang == "es-MX"
+    runs = language_runs(script.setting, "en", intro.terms, intro.term_lang)
+    assert ("Don Luis", "es-MX") in runs and ("Ana", "es-MX") in runs
+    assert language_runs("Banana bread.", "en", ["Ana"], "es-MX") == [("Banana bread.", "en")]

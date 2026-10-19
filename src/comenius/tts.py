@@ -10,10 +10,12 @@ import hashlib
 import io
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 import wave
+from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 from typing import Protocol
@@ -35,6 +37,29 @@ def ffmpeg_exe() -> str:
 
 class TTSError(RuntimeError):
     pass
+
+
+# A run of text and the language to pronounce it in, e.g. ("Ana", "es-MX").
+Run = tuple[str, str]
+_PUNCT = ",.;:!?…"
+
+
+def language_runs(text: str, lang: str, terms: Sequence[str], term_lang: str) -> list[Run]:
+    """Split `text` into runs, with whole-word occurrences of `terms` in `term_lang`.
+
+    >>> language_runs("The mechanic, Don Luis, greets her.", "en", ["Don Luis"], "es-MX")
+    [('The mechanic, ', 'en'), ('Don Luis', 'es-MX'), (', greets her.', 'en')]
+    """
+    if not terms:
+        return [(text, lang)]
+    alternatives = "|".join(re.escape(t) for t in sorted(set(terms), key=len, reverse=True))
+    parts = re.split(rf"(?<!\w)({alternatives})(?!\w)", text)
+    runs = [(part, term_lang if i % 2 else lang) for i, part in enumerate(parts)]
+    return [(t, lg) for t, lg in runs if t]
+
+
+def terms_in(text: str, terms: Sequence[str]) -> list[str]:
+    return [t for t in terms if re.search(rf"(?<!\w){re.escape(t)}(?!\w)", text)]
 
 
 class TTSProvider(Protocol):
@@ -66,6 +91,7 @@ class EspeakProvider:
     """Offline and free, robotic. Good for testing pipeline and pacing."""
 
     name = "espeak"
+    per_run_language = True
 
     def __init__(self) -> None:
         self.binary = shutil.which("espeak-ng") or shutil.which("espeak")
@@ -74,6 +100,9 @@ class EspeakProvider:
 
     def synthesize(self, text: str, voice: str, lang: str, rate: float) -> bytes:
         wpm = str(int(165 * rate))
+        base = lang.split("-")[0]
+        if not voice.startswith(base):
+            voice = base  # e.g. the English narrator voice reading a Spanish name
         result = subprocess.run(
             [self.binary, "-v", voice, "-s", wpm, "--stdout", text],
             capture_output=True,
@@ -128,6 +157,25 @@ class AzureProvider:
             f'<voice name="{voice}"><prosody rate="{pct}">{escape(text)}</prosody></voice>'
             "</speak>"
         )
+        return self._post(ssml)
+
+    def synthesize_runs(self, runs: list[Run], voice: str, rate: float) -> bytes:
+        """One request; foreign runs wrapped in <lang> (needs a Multilingual voice)."""
+        locale = "-".join(voice.split("-")[:2])
+        pct = f"{round((rate - 1.0) * 100):+d}%"
+        body = "".join(
+            escape(t) if lg.split("-")[0] == locale.split("-")[0]
+            else f'<lang xml:lang="{lg}">{escape(t)}</lang>'
+            for t, lg in runs
+        )  # fmt: skip
+        ssml = (
+            f'<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" '
+            f'xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang="{locale}">'
+            f'<voice name="{voice}"><prosody rate="{pct}">{body}</prosody></voice></speak>'
+        )
+        return self._post(ssml)
+
+    def _post(self, ssml: str) -> bytes:
         r = httpx.post(
             f"https://{self.region}.tts.speech.microsoft.com/cognitiveservices/v1",
             content=ssml.encode(),
@@ -176,6 +224,7 @@ class KokoroProvider:
     """Open-weights neural TTS that runs locally (pip install 'comenius[kokoro]')."""
 
     name = "kokoro"
+    per_run_language = True
 
     def __init__(self, model_dir: Path) -> None:
         model_dir = Path(os.path.expanduser(str(model_dir)))
@@ -197,7 +246,7 @@ class KokoroProvider:
         import numpy as np
 
         samples, sr = self.kokoro.create(
-            text, voice=voice, speed=rate, lang=KOKORO_LANGS.get(lang, lang)
+            text, voice=voice, speed=rate, lang=KOKORO_LANGS[lang.split("-")[0]]
         )
         pcm = (np.clip(samples, -1.0, 1.0) * 32767).astype("<i2").tobytes()
         return _pcm_to_wav(pcm, sr)
@@ -273,7 +322,9 @@ class ClipCache:
                 f"set [tts.voices.{self.provider.name}] in comenius.toml"
             ) from None
 
-    def key(self, role: str, lang: str, text: str, rate: float) -> str:
+    def key(
+        self, role: str, lang: str, text: str, rate: float, terms: Sequence[str], term_lang: str
+    ) -> str:
         payload = json.dumps(
             {
                 "provider": self.provider.name,
@@ -282,23 +333,73 @@ class ClipCache:
                 "lang": lang,
                 "rate": round(rate, 3),
                 "text": text,
+                **({"terms": sorted(terms), "term_lang": term_lang} if terms else {}),
             },
             sort_keys=True,
             ensure_ascii=False,
         )
         return hashlib.sha256(payload.encode()).hexdigest()[:24]
 
-    def clip(self, role: str, lang: str, text: str, rate: float = 1.0) -> Path:
-        path = self.dir / f"{self.key(role, lang, text, rate)}.wav"
+    def clip(
+        self,
+        role: str,
+        lang: str,
+        text: str,
+        rate: float = 1.0,
+        terms: Sequence[str] = (),
+        term_lang: str = "",
+    ) -> Path:
+        """Synthesize `text`; whole-word `terms` inside it are pronounced in `term_lang`.
+
+        Providers with in-request language switching (Azure) get one request.
+        Providers that take a language per call (Kokoro, espeak) synthesize each run
+        in the same voice and the runs are spliced. Others ignore `terms`.
+        """
+        runs = language_runs(text, lang, terms, term_lang)
+        if len(runs) == 1 or not (
+            hasattr(self.provider, "synthesize_runs")
+            or getattr(self.provider, "per_run_language", False)
+        ):
+            terms = ()
+        path = self.dir / f"{self.key(role, lang, text, rate, terms, term_lang)}.wav"
         if path.exists():
             self.hits += 1
             return path
-        raw = self.provider.synthesize(text, self.voice_for(role), lang, rate)
         tmp = path.with_suffix(".tmp.wav")
-        normalize_audio(raw, tmp)
+        if not terms:
+            normalize_audio(self.provider.synthesize(text, self.voice_for(role), lang, rate), tmp)
+        elif hasattr(self.provider, "synthesize_runs"):
+            normalize_audio(self.provider.synthesize_runs(runs, self.voice_for(role), rate), tmp)
+        else:
+            # Each run is synthesized on its own (and cached); a comma or period at
+            # a join becomes a short pause, otherwise the pieces nearly touch.
+            spoken = [(t.strip().strip(_PUNCT).strip(), t, lg) for t, lg in runs]
+            spoken = [r for r in spoken if r[0]]
+            with wave.open(str(tmp), "wb") as out:
+                out.setnchannels(1)
+                out.setsampwidth(2)
+                out.setframerate(SAMPLE_RATE)
+                for n, (_, raw_text, run_lang) in enumerate(spoken):
+                    if n:
+                        prev = spoken[n - 1][1].rstrip()
+                        joint = prev[-1:] + raw_text.lstrip()[:1]
+                        gap = 0.22 if set(joint) & set(_PUNCT) else 0.05
+                        out.writeframes(b"\x00\x00" * round(gap * SAMPLE_RATE))
+                    # Keep sentence-final punctuation on the last piece for intonation.
+                    text_n = raw_text.strip().lstrip(_PUNCT).strip()
+                    with wave.open(str(self.clip(role, run_lang, text_n, rate)), "rb") as w:
+                        out.writeframes(w.readframes(w.getnframes()))
         tmp.replace(path)
         self.synthesized += 1
         return path
 
-    def duration(self, role: str, lang: str, text: str, rate: float = 1.0) -> float:
-        return round(wav_duration(self.clip(role, lang, text, rate)), 3)
+    def duration(
+        self,
+        role: str,
+        lang: str,
+        text: str,
+        rate: float = 1.0,
+        terms: Sequence[str] = (),
+        term_lang: str = "",
+    ) -> float:
+        return round(wav_duration(self.clip(role, lang, text, rate, terms, term_lang)), 3)

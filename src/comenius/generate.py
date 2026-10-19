@@ -68,7 +68,9 @@ words in them except unavoidable names.
 - Stay inside the vocabulary and grammar described in the request. Use the learner's \
 known words freely; introduce new words only within the budget.
 - Give speakers voice_role values from: female_1, male_1, female_2, male_2. Never narrator.
-- Use names that an English narrator can pronounce reasonably.
+- Speaker names in English text are pronounced natively automatically. If English \
+text uses any other target-language word (a place, a dish), list it in \
+`foreign_terms` exactly as written so it's pronounced natively too.
 """
 
 REVIEW_SYSTEM = """\

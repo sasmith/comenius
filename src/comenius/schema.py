@@ -108,6 +108,11 @@ class LessonScript(BaseModel):
     grammar_note: str = ""
     drills: list[Drill] = Field(default_factory=list)
     review: list[ReviewItem] = Field(default_factory=list)
+    foreign_terms: list[str] = Field(
+        default_factory=list,
+        description="Target-language words that appear inside English fields (places, dishes) "
+        "and should be pronounced natively. Speaker names are included automatically.",
+    )
 
     @model_validator(mode="after")
     def _speakers_exist(self) -> LessonScript:
@@ -119,6 +124,10 @@ class LessonScript(BaseModel):
 
     def speaker(self, speaker_id: str) -> Speaker:
         return next(s for s in self.speakers if s.id == speaker_id)
+
+    def native_terms(self) -> list[str]:
+        """Words in English narration to pronounce in the target language."""
+        return [s.name for s in self.speakers] + self.foreign_terms
 
 
 class LessonSpec(BaseModel):
@@ -172,6 +181,10 @@ class Segment(BaseModel):
     lang: str
     text: str
     rate: float = 1.0
+    terms: list[str] = Field(
+        default_factory=list, description="Words in `text` to pronounce in `term_lang`."
+    )
+    term_lang: str = ""
     pause_after_s: float = 0.0
     start_s: float = 0.0
     duration_s: float = 0.0

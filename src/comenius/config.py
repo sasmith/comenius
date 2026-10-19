@@ -17,7 +17,7 @@ DEFAULT_VOICES: dict[str, dict[str, str]] = {
         "male_2": "es-419+m4",
     },
     "azure": {
-        "narrator": "en-US-AndrewNeural",
+        "narrator": "en-US-AndrewMultilingualNeural",  # can switch language mid-sentence
         "female_1": "es-MX-DaliaNeural",
         "male_1": "es-MX-JorgeNeural",
         "female_2": "es-MX-RenataNeural",

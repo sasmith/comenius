@@ -71,7 +71,10 @@ line by line. Repeat each phrase after the speaker."). Chapter markers in the
 MP3 carry the short section names (Listen, Line by line, Your turn, Noun
 genders, Swap a word, Say it in Spanish, Review, Listen again):
 
-1. **Intro** (narrator, English): the situation and who's speaking.
+1. **Intro** (narrator, English): the situation and who's speaking. Speaker
+   names and other target-language words in English narration are pronounced
+   natively (Azure: in-sentence language switch; Kokoro/espeak: the same voice
+   reads those words with Spanish pronunciation, spliced in).
 2. **Listen**: the dialog at natural speed, once, in two distinct voices, right
    after the intro with no signpost.
 3. **Line by line**: backward build-up of each whole line, with no English:

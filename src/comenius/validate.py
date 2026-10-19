@@ -69,7 +69,10 @@ def validate_script(script: LessonScript, spec: LessonSpec | None = None) -> lis
         if isinstance(drill, TranslationDrill):
             english_fields += [("translation.prompt_en", it.prompt_en) for it in drill.items]
             english_fields += [("translation.pattern", drill.pattern)]
+    native = script.native_terms()  # pronounced natively, so they may use ñ etc.
     for where, text in english_fields:
+        for term in native:
+            text = text.replace(term, "")
         if _NON_ENGLISH_MARKS & set(text):
             err("non_english_text", f"{where} must be English only (read by narrator): {text!r}")
 
