@@ -410,13 +410,27 @@ class ClipCache:
         rate: float = 1.0,
         terms: Sequence[str] = (),
         term_lang: str = "",
+        tempo: float = 1.0,
     ) -> Path:
         """Synthesize `text`; whole-word `terms` inside it are pronounced in `term_lang`.
 
         Providers with in-request language switching (Azure) get one request.
         Providers that take a language per call (Kokoro, espeak) synthesize each run
         in the same voice and the runs are spliced. Others ignore `terms`.
+        `tempo` speeds the synthesized clip up afterward, keeping pitch.
         """
+        if tempo != 1.0:
+            base = self.clip(role, lang, text, rate, terms, term_lang)
+            fast = base.with_name(f"{base.stem}-x{tempo:.2f}.wav")
+            if not fast.exists():
+                tmp = fast.with_suffix(".tmp.wav")
+                subprocess.run(
+                    [ffmpeg_exe(), "-y", "-loglevel", "error", "-i", str(base),
+                     "-af", f"atempo={tempo:.2f}", str(tmp)],
+                    check=True,
+                )  # fmt: skip
+                tmp.replace(fast)
+            return fast
         provider = self.provider_for(role)
         runs = language_runs(text, lang, terms, term_lang)
         if len(runs) == 1 or not (
@@ -465,5 +479,6 @@ class ClipCache:
         rate: float = 1.0,
         terms: Sequence[str] = (),
         term_lang: str = "",
+        tempo: float = 1.0,
     ) -> float:
-        return round(wav_duration(self.clip(role, lang, text, rate, terms, term_lang)), 3)
+        return round(wav_duration(self.clip(role, lang, text, rate, terms, term_lang, tempo)), 3)

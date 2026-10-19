@@ -23,10 +23,11 @@ from .schema import (
     TranslationDrill,
     VoiceRole,
 )
+from .speechrate import dialog_rates
 from .tts import terms_in
 
-# (voice, lang, text, rate, native terms, term lang) -> duration in seconds
-DurationFn = Callable[[str, str, str, float, Sequence[str], str], float]
+# (voice, lang, text, rate, native terms, term lang, tempo) -> duration in seconds
+DurationFn = Callable[[str, str, str, float, Sequence[str], str, float], float]
 
 NARRATOR: VoiceRole = "narrator"
 NARRATOR_LANG = "en"
@@ -36,10 +37,16 @@ _STRIP_RE = re.compile(r"[¿¡?!.,;:…\"“”«»()]")
 
 
 def estimate_duration(
-    voice: str, lang: str, text: str, rate: float, terms: Sequence[str] = (), term_lang: str = ""
+    voice: str,
+    lang: str,
+    text: str,
+    rate: float,
+    terms: Sequence[str] = (),
+    term_lang: str = "",
+    tempo: float = 1.0,
 ) -> float:
     """Rough speech-duration estimate (no TTS): ~14 chars/second at rate 1.0."""
-    return round(max(0.4, len(text) / 14.0) / max(rate, 0.1), 3)
+    return round(max(0.4, len(text) / 14.0) / max(rate, 0.1) / tempo, 3)
 
 
 # ---------------------------------------------------------------------------
@@ -163,9 +170,9 @@ class _Builder:
             return []
         return terms_in(text, self.script.native_terms())
 
-    def dur(self, voice: str, lang: str, text: str, rate: float = 1.0) -> float:
+    def dur(self, voice: str, lang: str, text: str, rate: float = 1.0, tempo: float = 1.0) -> float:
         terms = self.native(lang, text)
-        return self.duration_of(voice, lang, text, rate, terms, self.script.dialect)
+        return self.duration_of(voice, lang, text, rate, terms, self.script.dialect, tempo)
 
     def say(
         self,
@@ -175,9 +182,10 @@ class _Builder:
         text: str,
         *,
         rate: float = 1.0,
+        tempo: float = 1.0,
         pause_after: float = 0.0,
     ) -> Segment:
-        d = self.dur(voice, lang, text, rate)
+        d = self.dur(voice, lang, text, rate, tempo)
         terms = self.native(lang, text)
         seg = Segment(
             chapter=self.current_chapter,
@@ -186,6 +194,7 @@ class _Builder:
             lang=lang,
             text=text,
             rate=rate,
+            tempo=tempo,
             terms=terms,
             term_lang=self.script.dialect if terms else "",
             pause_after_s=round(pause_after, 3),
@@ -473,9 +482,20 @@ def build_timeline(
         b.clock += cfg.section_gap_s
 
     # 8. Final listening
+    # Faster than the voices' own speed, toward native rate: each voice is sped up by
+    # target / its measured syllable rate (Spanish only; capped at max_tempo).
+    tempo: dict[str, float] = {}
+    if cfg.final_listen_syllables_per_s:
+        for voice, rate in dialog_rates(b.segments, lang).items():
+            ratio = cfg.final_listen_syllables_per_s / rate
+            tempo[voice] = round(min(cfg.max_tempo, max(1.0, ratio)), 2)
     b.section("Listen again", "One last listen. Notice how much more you catch now.")
     for i, line in enumerate(script.dialog):
-        b.say("dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s)
+        voice = line_voice(i)
+        b.say(
+            "dialog", voice, lang, line.text, tempo=tempo.get(voice, 1.0),
+            pause_after=cfg.line_gap_s,
+        )  # fmt: skip
     b.guide(f"That's the end of this lesson: {script.title}.", pause_after=0.0)
 
     return Timeline(

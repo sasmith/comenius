@@ -192,6 +192,7 @@ class Segment(BaseModel):
     lang: str
     text: str
     rate: float = 1.0
+    tempo: float = Field(1.0, description="Speed-up applied after synthesis (pitch kept).")
     terms: list[str] = Field(
         default_factory=list, description="Words in `text` to pronounce in `term_lang`."
     )

@@ -20,8 +20,8 @@ class RenderResult:
     lesson_dir: Path
     timeline: Timeline
     files: dict[str, Path] = field(default_factory=dict)
-    # voice role -> ("provider:voice", syllables per second of full-speed dialog)
-    speech_rates: dict[str, tuple[str, float]] = field(default_factory=dict)
+    # voice role -> ("provider:voice", syllables/s of full-speed dialog, final-listen tempo)
+    speech_rates: dict[str, tuple[str, float, float]] = field(default_factory=dict)
 
 
 def _mmss(seconds: float) -> str:
@@ -63,11 +63,14 @@ def render_lesson(
 
     # Durations come from real (cached) TTS clips, so pauses fit the actual audio.
     timeline = build_timeline(script, cfg.lesson, cache.duration)
-    rates = dialog_rates(timeline, script.lang)
+    rates = dialog_rates(timeline.segments, script.lang)
+    tempo = {s.voice: s.tempo for s in timeline.segments if s.chapter == "Listen again"}
     result = RenderResult(
         lesson_dir=lesson_dir,
         timeline=timeline,
-        speech_rates={role: (str(cast[role]), r) for role, r in rates.items()},
+        speech_rates={
+            role: (str(cast[role]), r, tempo.get(role, 1.0)) for role, r in rates.items()
+        },
     )
 
     def write(name: str, text: str) -> None:
@@ -107,6 +110,7 @@ def render_lesson(
         "chapters": [c.model_dump() for c in timeline.chapters],
         "voices": {role: str(ref) for role, ref in cast.items()},
         "syllables_per_s": rates,
+        "final_listen_tempo": {role: t for role, t in tempo.items() if role in rates},
         "rendered_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "files": sorted(result.files),
     }

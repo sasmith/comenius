@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Iterable
 
-from .schema import Timeline
+from .schema import Segment
 
 STRONG = set("aeoáéóíú")  # accented i/u break a diphthong, so they count as strong
 WEAK = set("iuü")
@@ -35,7 +36,7 @@ def spanish_syllables(text: str) -> int:
     return total
 
 
-def dialog_rates(timeline: Timeline, lang: str) -> dict[str, float]:
+def dialog_rates(segments: Iterable[Segment], lang: str) -> dict[str, float]:
     """Syllables per second of speech for each voice's full-speed dialog lines.
 
     Clips are trimmed of leading and trailing silence, so this is articulation rate:
@@ -45,8 +46,8 @@ def dialog_rates(timeline: Timeline, lang: str) -> dict[str, float]:
         return {}
     syllables: dict[str, int] = {}
     seconds: dict[str, float] = {}
-    for seg in timeline.segments:
-        if seg.kind == "dialog" and seg.rate == 1.0:
+    for seg in segments:
+        if seg.kind == "dialog" and seg.rate == 1.0 and seg.tempo == 1.0:
             syllables[seg.voice] = syllables.get(seg.voice, 0) + spanish_syllables(seg.text)
             seconds[seg.voice] = seconds.get(seg.voice, 0.0) + seg.duration_s
     return {v: round(syllables[v] / seconds[v], 2) for v in syllables}

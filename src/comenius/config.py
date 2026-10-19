@@ -113,6 +113,12 @@ class LessonConfig(BaseModel):
         description="Weave English-cued recall of earlier lines into the lesson (Pimsleur-style).",
     )
     recall_intervals_s: list[float] = Field(default_factory=lambda: [5.0, 25.0, 120.0, 600.0])
+    final_listen_syllables_per_s: float = Field(
+        7.0,
+        description="Speed the final 'Listen again' up to this rate per voice (native Spanish "
+        "is ~7.8). 0 plays it at the voices' own speed.",
+    )
+    max_tempo: float = Field(1.6, description="Cap on the final-listen speed-up.")
     gap_s: float = 0.5
     step_gap_s: float = Field(1.5, description="Silence after a drill answer, before the next cue.")
     line_gap_s: float = 0.7
