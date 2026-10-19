@@ -122,7 +122,15 @@ class LessonSpec(BaseModel):
 
 
 SegmentKind = Literal[
-    "narration", "dialog", "buildup", "shadow", "drill_cue", "drill_answer", "recall", "review"
+    "narration",
+    "dialog",
+    "preview",
+    "buildup",
+    "shadow",
+    "drill_cue",
+    "drill_answer",
+    "recall",
+    "review",
 ]
 
 
@@ -154,5 +162,5 @@ class Timeline(BaseModel):
         return sum(
             s.pause_after_s
             for s in self.segments
-            if s.kind in {"buildup", "shadow", "drill_cue", "recall", "review"}
+            if s.kind in {"preview", "buildup", "shadow", "drill_cue", "recall", "review"}
         )
