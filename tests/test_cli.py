@@ -1,6 +1,7 @@
 """The command-line loop end to end: state, queue, plan, feed, publish (mock S3)."""
 
 import boto3
+import typer
 import pytest
 from moto import mock_aws
 from typer.testing import CliRunner
@@ -32,9 +33,10 @@ def run(*args: str) -> str:
 
 
 def test_all_commands_are_registered():
-    out = run("--help")
+    commands = typer.main.get_command(app).commands  # not --help text: CI adds color codes
     for name in ("render", "generate", "plan", "state", "queue", "syllabus", "feed", "publish"):
-        assert f" {name} " in out, name
+        assert name in commands, name
+    assert {"add", "show", "assume"} <= set(commands["state"].commands)
 
 
 def test_state_queue_plan_loop(config, tmp_path):
