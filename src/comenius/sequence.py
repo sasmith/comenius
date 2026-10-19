@@ -359,6 +359,10 @@ def build_timeline(
                 b.repeat_after_me(voice, word.form or word.lemma, cfg.buildup_rate)
 
         frags = buildup_fragments(line.text, cfg.max_buildup_steps)
+        if len(frags) > 1:
+            # Hear the whole line once, with a pause to try it, before building it up.
+            pause = b.learner_pause_for(voice, line.text)
+            b.say("preview", voice, lang, line.text, pause_after=pause)
         for frag in frags[:-1]:
             b.repeat_after_me(voice, frag, cfg.buildup_rate)
         if len(frags) > 1:

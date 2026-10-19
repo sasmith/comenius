@@ -62,6 +62,19 @@ def test_both_repetitions_get_the_same_pause(script):
         assert first.pause_after_s == second.pause_after_s >= 1.0
 
 
+def test_full_line_said_once_before_buildup(script):
+    segs = build_timeline(script).segments
+    for i, s in enumerate(segs):
+        if s.kind == "preview":
+            nxt = segs[i + 1]
+            assert nxt.kind == "buildup" and nxt.text != s.text
+            assert s.pause_after_s >= 1.0
+    previews = [s.text for s in segs if s.kind == "preview"]
+    assert previews[0] == script.dialog[0].text
+    # Lines too short to build up are not previewed (they'd just be said three times)
+    assert "¿Qué le pasa?" not in previews
+
+
 def test_split_sentences():
     assert split_sentences("Buenas tardes. ¿En qué le puedo ayudar?") == [
         "Buenas tardes.",
