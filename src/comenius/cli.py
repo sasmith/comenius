@@ -238,32 +238,96 @@ def state_show(
 
 @app.command()
 def plan(
-    topic: Annotated[str, typer.Option(help="What the lesson is about.")],
+    topic: Annotated[
+        str | None, typer.Option(help="What the lesson is about (default: next in the queue).")
+    ] = None,
     situation: Annotated[str, typer.Option(help="Optional scene for the dialog.")] = "",
     lang: Annotated[str, typer.Option(help="Language code.")] = "es",
     out: Annotated[Path | None, typer.Option("-o", "--out", help="Write the spec here.")] = None,
     config: ConfigOpt = None,
 ) -> None:
-    """Plan the next lesson spec from learner state and the syllabus."""
+    """Plan the next lesson spec from learner state, the syllabus, and the queue."""
     import yaml
 
-    from .planner import plan_next
+    from .planner import NothingToPlan, plan_next
 
     cfg = _cfg(config)
-    spec = plan_next(
-        LearnerState(cfg.state.path), cfg.state, lang=lang, topic=topic, situation=situation
-    )
+    try:
+        spec = plan_next(
+            LearnerState(cfg.state.path), cfg.state, lang=lang, topic=topic, situation=situation
+        )
+    except NothingToPlan as e:
+        typer.echo(str(e))
+        raise typer.Exit(1) from None
     text = yaml.safe_dump(
         spec.model_dump(mode="json", exclude_defaults=False), allow_unicode=True, sort_keys=False
     )
     path = out or Path("specs") / f"{spec.id}.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+    typer.echo(f"Topic: {spec.topic}")
+    if spec.required_words:
+        typer.echo(f"Queued words: {', '.join(spec.required_words)}")
     typer.echo(
         f"Wrote {path}: grammar {spec.grammar_points or '(syllabus complete)'}, "
         f"{len(spec.known_words)} known words, {len(spec.review)} review items"
     )
     typer.echo(f"Next: uv run comenius generate {path} --render --record")
+
+
+queue_app = typer.Typer(no_args_is_help=True, help="Things you want to learn, used by plan.")
+app.add_typer(queue_app, name="queue")
+
+
+@queue_app.command("add")
+def queue_add(
+    situation: Annotated[
+        str | None, typer.Argument(help='A situation, e.g. "Navigating the airport".')
+    ] = None,
+    lessons: Annotated[int, typer.Option(help="How many lessons on this situation.")] = 1,
+    words: Annotated[
+        str | None, typer.Option(help="Comma-separated words to work into lessons.")
+    ] = None,
+    lang: Annotated[str, typer.Option(help="Language code.")] = "es",
+    config: ConfigOpt = None,
+) -> None:
+    """Add a situation (a short series of lessons) or words to the queue."""
+    if (situation is None) == (words is None):
+        raise typer.BadParameter("give a situation or --words, not both")
+    st = LearnerState(_cfg(config).state.path)
+    if situation is not None:
+        entry = st.queue_add(lang, "situation", situation, lessons)
+    else:
+        assert words is not None
+        entry = st.queue_add(lang, "words", words, 1)
+    typer.echo(f"Added #{entry}")
+
+
+@queue_app.command("list")
+def queue_list(
+    lang: Annotated[str, typer.Option(help="Language code.")] = "es",
+    all_: Annotated[bool, typer.Option("--all", help="Include finished entries.")] = False,
+    config: ConfigOpt = None,
+) -> None:
+    """Show the queue with progress."""
+    entries = LearnerState(_cfg(config).state.path).queue(lang)
+    shown = [e for e in entries if all_ or not e.complete]
+    if not shown:
+        typer.echo("Queue is empty.")
+    for e in shown:
+        unit = "lessons" if e.kind == "situation" else "words known"
+        mark = "done" if e.complete else f"{e.done}/{e.total} {unit}"
+        typer.echo(f"#{e.id:<3} {e.kind:<9} {e.text}  [{mark}]")
+
+
+@queue_app.command("remove")
+def queue_remove(
+    entry_id: Annotated[int, typer.Argument(help="Entry number from queue list.")],
+    config: ConfigOpt = None,
+) -> None:
+    """Remove an entry from the queue."""
+    LearnerState(_cfg(config).state.path).queue_remove(entry_id)
+    typer.echo(f"Removed #{entry_id}")
 
 
 @app.command()

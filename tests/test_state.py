@@ -53,3 +53,32 @@ def test_placement_points_are_never_reviewed(state):
     assert state.assume_grammar("es", ["es.a1.greetings"]) == 0
     assert state.due("es", limit=10) == []
     assert {"es.a1.greetings", "es.a1.numbers"} <= state.known_grammar("es")
+
+
+def test_queue_series_drives_topics_until_done(state, script):
+    from comenius.planner import NothingToPlan
+
+    cfg = StateConfig()
+    with pytest.raises(NothingToPlan):
+        plan_next(state, cfg, lang="es")
+    state.queue_add("es", "situation", "At the bike shop", lessons=2)
+    first = plan_next(state, cfg, lang="es")
+    assert first.topic == "At the bike shop" and "Lesson 1 of 2" in first.situation
+
+    state.record_lesson(script.model_copy(update={"topic": "At the bike shop"}))
+    second = plan_next(state, cfg, lang="es")
+    assert "Lesson 2 of 2" in second.situation and script.title in second.situation
+
+    state.record_lesson(script.model_copy(update={"id": "es-0002", "topic": "At the bike shop"}))
+    assert state.queue("es")[0].complete
+    with pytest.raises(NothingToPlan):
+        plan_next(state, cfg, lang="es")
+
+
+def test_queued_words_become_required_until_known(state, script):
+    state.queue_add("es", "words", "llanta, pasaporte, equipaje, maleta, boleto")
+    state.record_lesson(script)  # teaches llanta
+    spec = plan_next(state, StateConfig(queue_words_per_lesson=3), lang="es", topic="travel")
+    assert spec.required_words == ["pasaporte", "equipaje", "maleta"]
+    entry = state.queue("es")[0]
+    assert (entry.done, entry.total) == (1, 5)

@@ -104,6 +104,7 @@ class LessonScript(BaseModel):
     lang: str = "es"
     dialect: str = "es-MX"
     title: str
+    topic: str = Field(default="", description="Set from the spec; leave empty.")
     setting: str = Field(description="One or two English sentences setting the scene.")
     speakers: list[Speaker] = Field(min_length=1)
     grammar_points: list[str] = Field(default_factory=list)

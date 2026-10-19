@@ -98,6 +98,7 @@ class StateConfig(BaseModel):
     path: Path = Path("~/.local/share/comenius/state.db")
     review_items: int = Field(5, description="Due items to put in each lesson's Review section.")
     new_grammar_points: int = Field(1, description="New syllabus points per planned lesson.")
+    queue_words_per_lesson: int = Field(3, description="Queued words required per lesson.")
 
 
 class FeedConfig(BaseModel):

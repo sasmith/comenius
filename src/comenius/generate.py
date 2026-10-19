@@ -133,7 +133,7 @@ class GenerationReport:
 def lesson_tool_schema() -> dict[str, Any]:
     schema = LessonScript.model_json_schema()
     # The pipeline fills these in from the spec.
-    for key in ("id", "review"):
+    for key in ("id", "review", "topic"):
         schema["properties"].pop(key, None)
         if key in schema.get("required", []):
             schema["required"].remove(key)
@@ -272,7 +272,13 @@ class Generator:
             report.attempts = attempt
             response = self._generate_call(messages)
             tool_id, data = _tool_input(response, LESSON_TOOL)
-            data = {**data, "id": spec.id, "lang": spec.lang, "dialect": spec.dialect}
+            data = {
+                **data,
+                "id": spec.id,
+                "lang": spec.lang,
+                "dialect": spec.dialect,
+                "topic": spec.topic,
+            }
             if spec.grammar_points:  # the plan decides what the lesson teaches
                 data["grammar_points"] = list(spec.grammar_points)
             data["review"] = [r.model_dump() for r in spec.review]

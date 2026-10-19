@@ -69,13 +69,17 @@ by default). Record lessons as you do them, and plan the next one from it:
 ```sh
 uv run comenius state assume --through es.a1.questions   # grammar you already know (optional)
 uv run comenius state add fixtures/lessons/es-0001.json  # record lessons you've done
-uv run comenius plan --topic "Dropping the kids off at school"   # -> specs/es-0002.yaml
+uv run comenius queue add "Navigating the airport" --lessons 3   # things you want to learn
+uv run comenius queue add --words "pasaporte, equipaje, maleta"
+uv run comenius plan                                      # -> specs/es-0002.yaml
 uv run comenius generate specs/es-0002.yaml --render --record
 uv run comenius state show                                # progress and what's due
 ```
 
 A planned lesson teaches the next syllabus point, treats words from earlier lessons
-as known, and reviews lines and words that are due. Items come back for review
+as known, and reviews lines and words that are due. Its topic is the first unfinished
+situation in the queue (or `--topic`), and up to three queued words are worked in.
+`comenius queue list` shows progress. Items come back for review
 after 1, 2, 4, 8, then 16 more lessons; each review moves an item to the next interval.
 
 Other commands:

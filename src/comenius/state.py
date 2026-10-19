@@ -45,6 +45,15 @@ CREATE TABLE IF NOT EXISTS items (
     stage       INTEGER NOT NULL,
     due_seq     INTEGER
 );
+CREATE TABLE IF NOT EXISTS queue (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    lang        TEXT NOT NULL,
+    kind        TEXT NOT NULL,
+    text        TEXT NOT NULL,
+    lessons     INTEGER NOT NULL,
+    added_at    TEXT NOT NULL,
+    removed     INTEGER NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS exposures (
     item_id     TEXT NOT NULL,
     lesson_seq  INTEGER NOT NULL,
@@ -69,7 +78,31 @@ class LessonRecord(BaseModel):
     seq: int
     id: str
     title: str
+    topic: str
     recorded_at: str
+
+
+QueueKind = Literal["situation", "words"]
+
+
+class QueueEntry(BaseModel):
+    """Something you want to work toward: a situation (a series of lessons) or words."""
+
+    id: int
+    lang: str
+    kind: QueueKind
+    text: str
+    lessons: int
+    added_at: str
+    done: int = 0  # lessons recorded on this situation, or queued words now known
+    total: int = 0  # lessons wanted, or number of words
+
+    @property
+    def complete(self) -> bool:
+        return self.done >= self.total
+
+    def words(self) -> list[str]:
+        return [w.strip() for w in self.text.split(",") if w.strip()]
 
 
 def item_id(lang: str, kind: ItemKind, key: str) -> str:
@@ -177,10 +210,57 @@ class LearnerState:
     def lessons(self, lang: str) -> list[LessonRecord]:
         with self._db() as db:
             rows = db.execute(
-                "SELECT seq, id, title, recorded_at FROM lessons WHERE lang = ? ORDER BY seq",
+                "SELECT seq, id, title, recorded_at, script_json FROM lessons "
+                "WHERE lang = ? ORDER BY seq",
                 (lang,),
             ).fetchall()
-        return [LessonRecord(**dict(r)) for r in rows]
+        return [
+            LessonRecord(
+                seq=r["seq"],
+                id=r["id"],
+                title=r["title"],
+                topic=LessonScript.model_validate_json(r["script_json"]).topic,
+                recorded_at=r["recorded_at"],
+            )
+            for r in rows
+        ]
+
+    # -- queue ---------------------------------------------------------------------
+
+    def queue_add(self, lang: str, kind: QueueKind, text: str, lessons: int = 1) -> int:
+        with self._db() as db:
+            cur = db.execute(
+                "INSERT INTO queue (lang, kind, text, lessons, added_at) VALUES (?,?,?,?,?)",
+                (lang, kind, text, lessons, datetime.now(UTC).isoformat(timespec="seconds")),
+            )
+            assert cur.lastrowid is not None
+            return cur.lastrowid
+
+    def queue_remove(self, entry_id: int) -> None:
+        with self._db() as db:
+            if db.execute("UPDATE queue SET removed = 1 WHERE id = ?", (entry_id,)).rowcount != 1:
+                raise ValueError(f"no queue entry {entry_id}")
+
+    def queue(self, lang: str) -> list[QueueEntry]:
+        """Active entries in the order added, with progress filled in."""
+        with self._db() as db:
+            rows = db.execute(
+                "SELECT id, lang, kind, text, lessons, added_at FROM queue "
+                "WHERE lang = ? AND removed = 0 ORDER BY id",
+                (lang,),
+            ).fetchall()
+        topics = [lesson.topic for lesson in self.lessons(lang)]
+        known = {w.lower() for w in self.known_words(lang)}
+        entries = []
+        for r in rows:
+            e = QueueEntry(**dict(r))
+            if e.kind == "situation":
+                e.done, e.total = topics.count(e.text), e.lessons
+            else:
+                words = e.words()
+                e.done, e.total = sum(w.lower() in known for w in words), len(words)
+            entries.append(e)
+        return entries
 
     def next_seq(self) -> int:
         with self._db() as db:
