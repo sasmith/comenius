@@ -8,10 +8,7 @@ topic: Dropping the kids off at school
 situation: >
   A parent drops two kids off at school in the morning and chats briefly with a
   teacher at the gate about pickup time.
-grammar_points: [es.a1.presente.ir, es.a1.hora]
-grammar_descriptions:
-  es.a1.presente.ir: "present tense of ir (voy, vas, va, vamos, van)"
-  es.a1.hora: "telling time: a las tres, a las tres y media"
+grammar_points: [es.a1.ir_a_place, es.a1.time]   # ids from the syllabus (comenius syllabus)
 new_word_budget: [6, 10]
 required_words: [escuela, recoger]
 known_words: [hola, adiós, gracias, buenos, días, tardes, sí, no, bien, perfecto,

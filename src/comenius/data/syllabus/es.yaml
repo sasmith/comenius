@@ -1,0 +1,437 @@
+# Spanish grammar syllabus, in teaching order.
+#
+# Our own wording and ordering. The Plan Curricular del Instituto Cervantes (PCIC)
+# was used as a checklist of what belongs at each CEFR level; nothing here is copied
+# from it. Mexican Spanish is the default variety (ustedes for plural "you", carro,
+# computadora).
+#
+# Fields:
+#   id           stable identifier, never renamed once lessons reference it
+#   level        CEFR level
+#   title        short name
+#   description  what the learner should be able to do, for the lesson generator
+#   examples     a few sentences showing the point
+#   requires     ids of points that must come first (must appear earlier in the list)
+
+language: es
+dialect: es-MX
+
+points:
+  # --------------------------------------------------------------------- A1
+  - id: es.a1.greetings
+    level: A1
+    title: Greetings and courtesy
+    description: Greet, take leave, and use basic courtesy phrases at different times of day.
+    examples: ["Buenos días.", "Buenas tardes.", "Muchas gracias.", "Perdón.", "Con permiso."]
+
+  - id: es.a1.subject_pronouns
+    level: A1
+    title: Subject pronouns
+    description: >
+      yo, tú, usted, él, ella, nosotros/nosotras, ustedes, ellos/ellas. In Mexico,
+      ustedes is the only plural "you". Subject pronouns are usually dropped.
+    examples: ["Yo soy Ana.", "¿Usted es Don Luis?", "Ellos son de Monterrey."]
+
+  - id: es.a1.ser_identity
+    level: A1
+    title: ser for identity, origin, profession
+    description: Present tense of ser to say who someone is, where they're from, and what they do.
+    examples: ["Soy Alex.", "Ella es de Guadalajara.", "Somos ingenieros."]
+    requires: [es.a1.subject_pronouns]
+
+  - id: es.a1.gender_articles
+    level: A1
+    title: Noun gender and articles
+    description: >
+      Every noun is masculine or feminine; el/la and un/una agree with it. Most -o nouns
+      are masculine and most -a nouns feminine, with common exceptions (el día,
+      el problema, el mapa, la mano, la foto).
+    examples: ["el carro", "la bicicleta", "un problema", "una llanta"]
+
+  - id: es.a1.plurals
+    level: A1
+    title: Plurals
+    description: Plural nouns (-s after a vowel, -es after a consonant) with los/las/unos/unas.
+    examples: ["los carros", "las llantas", "unos relojes"]
+    requires: [es.a1.gender_articles]
+
+  - id: es.a1.adjective_agreement
+    level: A1
+    title: Adjective agreement and position
+    description: Adjectives agree in gender and number and usually follow the noun.
+    examples: ["una bicicleta nueva", "dos perros pequeños", "los cascos rojos"]
+    requires: [es.a1.plurals]
+
+  - id: es.a1.estar_location
+    level: A1
+    title: estar for location and state
+    description: Present tense of estar to say where something is and how someone is.
+    examples: ["¿Dónde está la estación?", "Estoy cansado.", "El taller está cerca."]
+    requires: [es.a1.subject_pronouns]
+
+  - id: es.a1.hay
+    level: A1
+    title: hay
+    description: hay for existence ("there is / there are"), with indefinite articles or numbers.
+    examples: ["Hay una farmacia aquí.", "¿Hay un taller cerca?", "No hay llantas."]
+    requires: [es.a1.gender_articles]
+
+  - id: es.a1.present_ar
+    level: A1
+    title: Present tense, regular -ar verbs
+    description: All persons of regular -ar verbs in the present tense.
+    examples: ["Trabajo en una oficina.", "¿Hablas inglés?", "Necesitamos ayuda."]
+    requires: [es.a1.subject_pronouns]
+
+  - id: es.a1.present_er_ir
+    level: A1
+    title: Present tense, regular -er and -ir verbs
+    description: All persons of regular -er and -ir verbs in the present tense.
+    examples: ["Como a las dos.", "¿Dónde vives?", "Ellos venden bicicletas."]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.negation
+    level: A1
+    title: Negation with no
+    description: Put no directly before the verb.
+    examples: ["No necesito nada.", "No es mi carro.", "No hay problema."]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.questions
+    level: A1
+    title: Question words
+    description: qué, quién, dónde, cuándo, cuánto, cómo, por qué; yes/no questions by intonation.
+    examples: ["¿Qué necesita?", "¿Dónde está?", "¿Cuándo llega?", "¿Cómo se llama?"]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.numbers
+    level: A1
+    title: Numbers 0-100
+    description: Count, give phone numbers and quantities up to 100.
+    examples: ["dos perros", "quince pesos", "cien pesos"]
+
+  - id: es.a1.cuanto_cuesta
+    level: A1
+    title: Asking prices
+    description: ¿Cuánto cuesta? / ¿Cuánto cuestan? with singular and plural nouns; answering with prices.
+    examples: ["¿Cuánto cuesta la llanta?", "¿Cuánto cuestan los cascos?", "Son cien pesos."]
+    requires: [es.a1.numbers, es.a1.plurals]
+
+  - id: es.a1.usted
+    level: A1
+    title: usted vs tú
+    description: >
+      Choose usted (formal) or tú (informal) and use the matching verb forms and
+      pronouns (le, su vs te, tu).
+    examples: ["¿En qué le puedo ayudar?", "¿Cómo está usted?", "¿Cómo estás?"]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.possessives
+    level: A1
+    title: Possessive adjectives
+    description: mi, tu, su, nuestro agree with the thing owned; su is ambiguous and context decides.
+    examples: ["mi bicicleta", "tus llaves", "su teléfono", "nuestra casa"]
+    requires: [es.a1.plurals]
+
+  - id: es.a1.tener
+    level: A1
+    title: tener
+    description: Present tense of tener for possession, age, and fixed expressions (tener hambre, tener prisa).
+    examples: ["Tengo una bicicleta.", "Tiene cuarenta años.", "Tenemos prisa."]
+    requires: [es.a1.present_er_ir]
+
+  - id: es.a1.ir_a_place
+    level: A1
+    title: ir a + place
+    description: Present tense of ir with a + place; a + el contracts to al.
+    examples: ["Voy al taller.", "Vamos a la escuela.", "¿Adónde vas?"]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.necesitar_inf
+    level: A1
+    title: Verb + infinitive
+    description: necesitar, querer, poder, preferir + infinitive to say what someone needs, wants, or can do.
+    examples: ["Necesito arreglar mi bicicleta.", "¿Puede ayudarme?", "Quiero comprar un casco."]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.stem_e_ie
+    level: A1
+    title: Stem change e → ie
+    description: querer, preferir, empezar, cerrar change e to ie except in nosotros.
+    examples: ["Quiero un café.", "¿A qué hora empieza?", "Preferimos el carro."]
+    requires: [es.a1.present_er_ir]
+
+  - id: es.a1.stem_o_ue
+    level: A1
+    title: Stem change o → ue
+    description: poder, costar, dormir, volver change o to ue except in nosotros.
+    examples: ["¿Puedo pasar?", "¿Cuánto cuesta?", "Vuelvo mañana."]
+    requires: [es.a1.stem_e_ie]
+
+  - id: es.a1.stem_e_i
+    level: A1
+    title: Stem change e → i
+    description: pedir, servir, repetir change e to i except in nosotros.
+    examples: ["Pido un taco.", "¿Me repite, por favor?", "¿En qué le sirvo?"]
+    requires: [es.a1.stem_o_ue]
+
+  - id: es.a1.gustar
+    level: A1
+    title: gustar
+    description: me/te/le/nos/les gusta(n) + noun or infinitive; the thing liked is the subject.
+    examples: ["Me gusta el café.", "Le gustan los perros.", "¿Te gusta correr?"]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.time
+    level: A1
+    title: Telling time
+    description: ¿Qué hora es?, es la una / son las tres, y media, menos cuarto, a las + time.
+    examples: ["Son las tres y media.", "Es la una.", "La clase es a las cinco."]
+    requires: [es.a1.numbers]
+
+  - id: es.a1.days_dates
+    level: A1
+    title: Days, months, dates
+    description: Days of the week with el/los, months, dates, and para + a time as a deadline.
+    examples: ["el lunes", "los sábados", "el tres de mayo", "Para el viernes, por favor."]
+    requires: [es.a1.numbers]
+
+  - id: es.a1.demonstratives
+    level: A1
+    title: Demonstratives
+    description: este/esta/estos/estas and ese/esa/esos/esas agree with the noun.
+    examples: ["este casco", "esa mochila", "estas llantas"]
+    requires: [es.a1.plurals]
+
+  - id: es.a1.direct_object_pronouns
+    level: A1
+    title: Direct object pronouns
+    description: lo, la, los, las replace a noun object and go before a conjugated verb.
+    examples: ["¿La necesita para mañana?", "Lo tengo.", "Las compro aquí."]
+    requires: [es.a1.necesitar_inf, es.a1.gender_articles]
+
+  - id: es.a1.ir_a_inf
+    level: A1
+    title: Near future with ir a + infinitive
+    description: Talk about plans with ir a + infinitive.
+    examples: ["Voy a comprar pan.", "¿Vas a venir?", "Vamos a arreglar el carro."]
+    requires: [es.a1.ir_a_place]
+
+  - id: es.a1.tener_que
+    level: A1
+    title: Obligation
+    description: tener que + infinitive (personal obligation) and hay que + infinitive (general).
+    examples: ["Tengo que trabajar.", "Hay que pagar en la caja."]
+    requires: [es.a1.tener]
+
+  - id: es.a1.irregular_yo
+    level: A1
+    title: Irregular yo forms
+    description: hago, pongo, salgo, traigo, vengo, digo, conozco, sé.
+    examples: ["Salgo a las siete.", "No sé.", "Traigo mi bicicleta."]
+    requires: [es.a1.present_er_ir]
+
+  - id: es.a1.reflexive
+    level: A1
+    title: Reflexive verbs
+    description: llamarse, levantarse, ducharse, irse with me/te/se/nos/se; daily routines.
+    examples: ["Me llamo Ana.", "Me levanto a las seis.", "¿A qué hora se va?"]
+    requires: [es.a1.present_ar]
+
+  - id: es.a1.frequency
+    level: A1
+    title: Frequency
+    description: siempre, a veces, casi nunca, nunca, todos los días, cada semana.
+    examples: ["Siempre voy en bicicleta.", "Nunca como carne.", "Corro todos los días."]
+    requires: [es.a1.present_er_ir]
+
+  - id: es.a1.prepositions_place
+    level: A1
+    title: Prepositions of place
+    description: en, cerca de, lejos de, al lado de, enfrente de, entre, a la derecha/izquierda.
+    examples: ["El taller está al lado del banco.", "Está a la derecha."]
+    requires: [es.a1.estar_location]
+
+  - id: es.a1.ser_vs_estar
+    level: A1
+    title: ser vs estar
+    description: ser for identity and characteristics; estar for location, states, and results.
+    examples: ["La llanta es nueva.", "La llanta está ponchada.", "Es de México y está en Madrid."]
+    requires: [es.a1.ser_identity, es.a1.estar_location]
+
+  # --------------------------------------------------------------------- A2
+  - id: es.a2.present_progressive
+    level: A2
+    title: Present progressive
+    description: estar + gerund for actions in progress right now.
+    examples: ["Estoy trabajando.", "¿Qué estás haciendo?", "Está lloviendo."]
+    requires: [es.a1.estar_location, es.a1.present_er_ir]
+
+  - id: es.a2.indirect_object_pronouns
+    level: A2
+    title: Indirect object pronouns
+    description: me, te, le, nos, les for "to/for someone", including with dar, decir, prestar.
+    examples: ["Le doy el libro.", "¿Me presta su pluma?", "Les digo mañana."]
+    requires: [es.a1.direct_object_pronouns]
+
+  - id: es.a2.preterite_regular
+    level: A2
+    title: Preterite, regular verbs
+    description: Completed past actions with regular -ar, -er, -ir verbs.
+    examples: ["Ayer trabajé mucho.", "¿Comiste?", "Vivieron en Puebla."]
+    requires: [es.a1.present_er_ir]
+
+  - id: es.a2.preterite_irregular
+    level: A2
+    title: Preterite, common irregulars
+    description: fui, tuve, hice, estuve, pude, puse, dije, vine, di.
+    examples: ["Fui al taller.", "Tuve un problema.", "¿Qué hiciste el sábado?"]
+    requires: [es.a2.preterite_regular]
+
+  - id: es.a2.double_object_pronouns
+    level: A2
+    title: Double object pronouns
+    description: Indirect before direct; le/les become se before lo/la/los/las.
+    examples: ["Se lo doy.", "¿Me la presta?", "Te lo explico."]
+    requires: [es.a2.indirect_object_pronouns]
+
+  - id: es.a2.imperfect
+    level: A2
+    title: Imperfect
+    description: Past habits, descriptions, and background with the imperfect.
+    examples: ["De niño, jugaba fútbol.", "Era tarde y llovía.", "Vivíamos cerca."]
+    requires: [es.a2.preterite_regular]
+
+  - id: es.a2.preterite_vs_imperfect
+    level: A2
+    title: Preterite vs imperfect
+    description: Completed events vs ongoing background; an event interrupting a scene.
+    examples: ["Llovía cuando salí.", "Estaba en casa cuando llamaste."]
+    requires: [es.a2.preterite_irregular, es.a2.imperfect]
+
+  - id: es.a2.comparatives
+    level: A2
+    title: Comparatives
+    description: más/menos ... que, tan ... como, mejor, peor, mayor, menor.
+    examples: ["Este casco es más caro que ese.", "Es tan rápido como el otro."]
+    requires: [es.a1.adjective_agreement]
+
+  - id: es.a2.superlatives
+    level: A2
+    title: Superlatives
+    description: el/la más ... de; the -ísimo intensifier.
+    examples: ["Es la llanta más barata de la tienda.", "Está carísimo."]
+    requires: [es.a2.comparatives]
+
+  - id: es.a2.por_vs_para
+    level: A2
+    title: por vs para
+    description: para for purpose, recipient, deadline, destination; por for cause, exchange, duration, through.
+    examples: ["Es para mi hija.", "Gracias por la ayuda.", "Pasamos por el parque."]
+    requires: [es.a1.days_dates]
+
+  - id: es.a2.commands_formal
+    level: A2
+    title: Formal commands
+    description: usted and ustedes commands for instructions and directions.
+    examples: ["Pase, por favor.", "Siga derecho.", "Tome la segunda calle."]
+    requires: [es.a1.usted, es.a1.irregular_yo]
+
+  - id: es.a2.commands_tu
+    level: A2
+    title: Affirmative tú commands
+    description: Regular (habla, come) and irregular (ven, ten, pon, di, haz, sal, ve) tú commands.
+    examples: ["Ven aquí.", "Dime.", "Toma la llave."]
+    requires: [es.a2.commands_formal]
+
+  - id: es.a2.commands_negative
+    level: A2
+    title: Negative commands
+    description: no + subjunctive form for tú and usted.
+    examples: ["No te preocupes.", "No toque eso, por favor.", "No corras."]
+    requires: [es.a2.commands_tu]
+
+  - id: es.a2.indefinites
+    level: A2
+    title: Indefinites and double negation
+    description: algo/nada, alguien/nadie, algún/ningún, también/tampoco; no + verb + nada.
+    examples: ["¿Necesita algo más?", "No hay nadie.", "Yo tampoco."]
+    requires: [es.a1.negation]
+
+  - id: es.a2.present_perfect
+    level: A2
+    title: Present perfect
+    description: haber + participle; less common in Mexico than the preterite but needed.
+    examples: ["¿Ya has comido?", "Nunca he ido a Oaxaca."]
+    requires: [es.a2.preterite_regular]
+
+  - id: es.a2.future
+    level: A2
+    title: Simple future
+    description: Future forms (iré, tendré, podré), and the future of probability.
+    examples: ["Mañana lloverá.", "¿Dónde estará Ana?"]
+    requires: [es.a1.ir_a_inf]
+
+  - id: es.a2.conditional_courtesy
+    level: A2
+    title: Polite requests with the conditional
+    description: quisiera, podría, me gustaría, debería for polite requests and suggestions.
+    examples: ["Quisiera un café, por favor.", "¿Podría ayudarme?", "Me gustaría ir."]
+    requires: [es.a1.necesitar_inf]
+
+  - id: es.a2.relative_que
+    level: A2
+    title: Relative clauses
+    description: que and donde to describe people, things, and places.
+    examples: ["El taller que está en la esquina.", "La ciudad donde vivo."]
+    requires: [es.a1.present_er_ir]
+
+  - id: es.a2.verbal_periphrases
+    level: A2
+    title: acabar de, volver a, dejar de
+    description: acabar de (just did), volver a (again), dejar de (stop) + infinitive.
+    examples: ["Acabo de llegar.", "Volví a llamar.", "Dejé de fumar."]
+    requires: [es.a1.necesitar_inf]
+
+  - id: es.a2.weather
+    level: A2
+    title: Weather
+    description: hace frío/calor/sol, está lloviendo/nublado, hay neblina.
+    examples: ["Hace mucho calor.", "Está nublado.", "Va a llover."]
+    requires: [es.a2.present_progressive]
+
+  # --------------------------------------------------------------------- B1
+  - id: es.b1.subjunctive_wishes
+    level: B1
+    title: Subjunctive after wishes and requests
+    description: querer que, pedir que, esperar que + present subjunctive.
+    examples: ["Quiero que vengas.", "Espero que estés bien.", "Le pido que espere."]
+    requires: [es.a2.commands_negative]
+
+  - id: es.b1.subjunctive_emotion
+    level: B1
+    title: Subjunctive after emotion and evaluation
+    description: me alegra que, me molesta que, es importante que + subjunctive.
+    examples: ["Me alegra que estés aquí.", "Es importante que llegues temprano."]
+    requires: [es.b1.subjunctive_wishes]
+
+  - id: es.b1.subjunctive_doubt
+    level: B1
+    title: Subjunctive after doubt and denial
+    description: no creo que, dudo que, no es verdad que + subjunctive; creo que + indicative.
+    examples: ["No creo que llueva.", "Creo que va a llover."]
+    requires: [es.b1.subjunctive_wishes]
+
+  - id: es.b1.subjunctive_time
+    level: B1
+    title: Subjunctive in future time clauses
+    description: cuando, en cuanto, hasta que + subjunctive for future events.
+    examples: ["Cuando llegues, llámame.", "Espera hasta que termine."]
+    requires: [es.b1.subjunctive_wishes]
+
+  - id: es.b1.si_clauses
+    level: B1
+    title: Hypothetical si clauses
+    description: si + imperfect subjunctive, conditional in the result.
+    examples: ["Si tuviera tiempo, iría.", "¿Qué harías si ganaras?"]
+    requires: [es.b1.subjunctive_doubt, es.a2.conditional_courtesy]

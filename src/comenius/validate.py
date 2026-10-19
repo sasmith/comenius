@@ -12,6 +12,7 @@ from typing import Literal
 
 from .schema import LessonScript, LessonSpec, SubstitutionDrill, TranslationDrill
 from .sequence import fold_accents, normalize_token, tokens
+from .syllabus import load_syllabus
 
 Severity = Literal["error", "warning"]
 
@@ -159,6 +160,10 @@ def validate_script(script: LessonScript, spec: LessonSpec | None = None) -> lis
             )
         if not d.pattern:
             warn("translation_pattern_missing", "translation group has no pattern description")
+    syllabus = load_syllabus(spec.lang)
+    for g in spec.grammar_points:
+        if g not in syllabus and g not in spec.grammar_descriptions:
+            err("unknown_grammar_point", f"{g!r} is not in the {spec.lang} syllabus")
     allowed = set(spec.grammar_points)
     for i, line in enumerate(script.dialog):
         extra = set(line.grammar_tags) - allowed

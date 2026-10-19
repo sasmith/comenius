@@ -13,7 +13,7 @@ with the least code. Each milestone ends with something to listen to.
 | M0 Scaffold | Done | uv, Typer CLI, ruff, pytest, CI |
 | M1 Lesson → MP3 | Done, pending real-voice bake-off | Sequencer, TTS providers (espeak, Kokoro, Azure, OpenAI, ElevenLabs), clip cache, MP3 with chapters. espeak and Kokoro are tested end to end; the paid providers need keys to verify. |
 | M2 LLM generation | Done, untested against the live API | Forced tool-call JSON, code checks, native-speaker review pass, regeneration loop, cache. Loop is tested with a fake client. |
-| M3 Curriculum constraints | Partial | Token-level checks and spec budgets only. Still to do: `syllabus/es.yaml`, spaCy lemmatization, frequency bands, planner. |
+| M3 Curriculum constraints | Partial | Syllabus done (`src/comenius/data/syllabus/es.yaml`, 60 points A1→B1, `comenius syllabus`), used by generation and validation. Still to do: spaCy lemmatization, frequency bands, planner. |
 | M4 PDF + Anki | Done | Typst PDF with answer page; genanki deck with stable GUIDs and audio. |
 | M5 Podcast feed | Done (build only) | `comenius feed` writes a static site; upload with `aws s3 sync` or rclone. |
 | M6 Learner state | Not started | |

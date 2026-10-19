@@ -62,3 +62,8 @@ def test_progressive_step_must_change_previous_answer(script):
 def test_drill_counts(script):
     issues = validate_script(script, spec(gender_drills=2, substitution_items=(11, 12)))
     assert {"too_few_gender_drills", "substitution_item_count"} <= set(errors(issues))
+
+
+def test_unknown_grammar_point(script):
+    issues = validate_script(script, spec(grammar_points=["es.a1.not_a_point"]))
+    assert "unknown_grammar_point" in errors(issues)

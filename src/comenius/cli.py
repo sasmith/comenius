@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
-import yaml
 
 from .config import Config, load_config
 from .schema import LessonScript, LessonSpec
@@ -28,9 +27,7 @@ def _load_script(path: Path) -> LessonScript:
 
 
 def _load_spec(path: Path) -> LessonSpec:
-    text = path.read_text(encoding="utf-8")
-    data = json.loads(text) if path.suffix == ".json" else yaml.safe_load(text)
-    return LessonSpec.model_validate(data)
+    return LessonSpec.from_file(path)
 
 
 def _mmss(s: float) -> str:
@@ -156,6 +153,32 @@ def feed(
     feed_cfg = cfg.feed.model_copy(update={"base_url": base_url} if base_url else {})
     path = build_feed(out or cfg.out_dir, site, feed_cfg)
     typer.echo(f"Wrote {path}. Upload {site}/ so that {feed_cfg.base_url}/feed.xml resolves.")
+
+
+@app.command()
+def syllabus(
+    lang: Annotated[str, typer.Option(help="Language code.")] = "es",
+    level: Annotated[str | None, typer.Option(help="Only this CEFR level, e.g. A1.")] = None,
+    known: Annotated[
+        str | None, typer.Option(help="Comma-separated known ids; show what's next.")
+    ] = None,
+    full: Annotated[bool, typer.Option(help="Show descriptions and examples.")] = False,
+) -> None:
+    """List the grammar syllabus, or the next teachable points given what's known."""
+    from .syllabus import load_syllabus
+
+    syl = load_syllabus(lang)
+    if known is not None:
+        known_ids = {k.strip() for k in known.split(",") if k.strip()}
+        points = syl.next_points(known_ids, n=5)
+        typer.echo(f"Next after {len(known_ids)} known point(s):")
+    else:
+        points = [p for p in syl.points if level is None or p.level == level.upper()]
+    for p in points:
+        typer.echo(f"{p.level}  {p.id:<34} {p.title}")
+        if full:
+            typer.echo(f"      {p.description}")
+            typer.echo(f"      e.g. {' / '.join(p.examples)}")
 
 
 @app.command()

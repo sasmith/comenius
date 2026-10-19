@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from .config import LLMConfig
 from .schema import LessonScript, LessonSpec
+from .syllabus import load_syllabus
 from .validate import Issue, validate_script
 
 LESSON_TOOL = "submit_lesson"
@@ -148,10 +149,14 @@ def spec_prompt(spec: LessonSpec) -> str:
     if spec.situation:
         parts.append(f"Situation: {spec.situation}")
     if spec.grammar_points:
-        lines = [
-            f"- {g}: {spec.grammar_descriptions.get(g, '')}".rstrip(": ")
-            for g in spec.grammar_points
-        ]
+        syllabus = load_syllabus(spec.lang)
+        lines = []
+        for g in spec.grammar_points:
+            if g in spec.grammar_descriptions:
+                lines.append(f"- {g}: {spec.grammar_descriptions[g]}")
+            else:
+                p = syllabus.get(g)
+                lines.append(f"- {g}: {p.title}. {p.description} e.g. {' / '.join(p.examples)}")
         parts.append(
             "Grammar points to feature (tag dialog lines with these ids in grammar_tags):\n"
             + "\n".join(lines)

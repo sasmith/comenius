@@ -69,6 +69,8 @@ uv run comenius validate lessons/es-0002.json --spec examples/specs/es-0002.yaml
 uv run comenius feed --base-url https://<bucket>/<long-random-path>
 aws s3 sync site/ s3://<bucket>/<long-random-path>/          # then subscribe to .../feed.xml
 uv run comenius schema script                                 # JSON Schema for lesson scripts
+uv run comenius syllabus --level A1 --full                    # grammar syllabus
+uv run comenius syllabus --known es.a1.greetings,es.a1.present_ar  # what to teach next
 ```
 
 ## Configuration
