@@ -118,9 +118,9 @@ class LessonConfig(BaseModel):
         description="Speed the final 'Listen again' up to this rate per voice (native Spanish "
         "is ~7.8). 0 plays it at the voices' own speed.",
     )
-    max_tempo: float = Field(1.2, description="Cap on the final-listen speed-up.")
+    max_tempo: float = Field(1.1, description="Cap on the final-listen speed-up.")
     tempo_method: Literal["stretch", "provider"] = Field(
-        "stretch",
+        "provider",
         description="How the final listen is sped up: 'stretch' speeds the normal clip up "
         "afterward (uniform, free, every provider); 'provider' asks the TTS service to speak "
         "faster (new synthesis, may sound more like natural fast speech).",

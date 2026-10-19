@@ -23,11 +23,16 @@ def test_render_all_outputs(script, tmp_path):
     rates = json.loads(result.files["meta.json"].read_text())["syllables_per_s"]
     assert set(rates) == {sp.voice_role for sp in script.speakers}
     assert all(2 < r < 15 for r in rates.values())
-    # The final listen is sped toward 7 syllables/s (espeak is ~4.3, so it hits the 1.2 cap).
+    # The final listen is re-synthesized faster, toward 7 syllables/s (espeak is ~4.3, so
+    # it hits the 1.1 cap).
     meta = json.loads(result.files["meta.json"].read_text())
     final = meta["final_listen_syllables_per_s"]
-    assert meta["tempo_method"] == "stretch"
-    assert all(abs(final[v] / rates[v] - 1.2) < 0.03 for v in rates)
+    assert meta["tempo_method"] == "provider"
+    last = [
+        s for s in result.timeline.segments if s.chapter == "Listen again" and s.kind == "dialog"
+    ]
+    assert {(s.rate, s.tempo) for s in last} == {(1.1, 1.0)}
+    assert all(final[v] > 1.04 * rates[v] for v in rates)
 
     mp3 = result.files["lesson.mp3"]
     probe = subprocess.run(
@@ -73,19 +78,19 @@ def test_spanish_syllables():
     assert {text: spanish_syllables(text) for text in cases} == cases
 
 
-def test_provider_tempo_method_resynthesizes_faster(script, tmp_path):
+def test_stretch_tempo_method_speeds_up_the_normal_clip(script, tmp_path):
     from comenius.config import LessonConfig
 
     cfg = Config(
         out_dir=tmp_path / "out",
         tts=TTSConfig(cache_dir=tmp_path / "cache"),
-        lesson=LessonConfig(tempo_method="provider"),
+        lesson=LessonConfig(tempo_method="stretch"),
     )
     result = render_lesson(script, cfg, provider="espeak", mp3=False, pdf=False, anki=False)
     last = [
         s for s in result.timeline.segments if s.chapter == "Listen again" and s.kind == "dialog"
     ]
-    assert {(s.rate, s.tempo) for s in last} == {(1.2, 1.0)}
+    assert {(s.rate, s.tempo) for s in last} == {(1.0, 1.1)}
     meta = json.loads(result.files["meta.json"].read_text())
     base, final = meta["syllables_per_s"], meta["final_listen_syllables_per_s"]
-    assert all(final[v] > 1.1 * base[v] for v in base)
+    assert all(abs(final[v] / base[v] - 1.1) < 0.03 for v in base)
