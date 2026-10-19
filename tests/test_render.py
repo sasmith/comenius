@@ -20,6 +20,9 @@ pytestmark = pytest.mark.skipif(
 def test_render_all_outputs(script, tmp_path):
     cfg = Config(out_dir=tmp_path / "out", tts=TTSConfig(cache_dir=tmp_path / "cache"))
     result = render_lesson(script, cfg, provider="espeak")
+    rates = json.loads(result.files["meta.json"].read_text())["syllables_per_s"]
+    assert set(rates) == {sp.voice_role for sp in script.speakers}
+    assert all(2 < r < 15 for r in rates.values())
 
     mp3 = result.files["lesson.mp3"]
     probe = subprocess.run(
@@ -49,3 +52,17 @@ def test_second_render_uses_cache(script, tmp_path):
     clips = len(list((tmp_path / "cache" / "espeak").glob("*.wav")))
     render_lesson(script, cfg, provider="espeak", mp3=False, pdf=False, anki=False)
     assert len(list((tmp_path / "cache" / "espeak").glob("*.wav"))) == clips
+
+
+def test_spanish_syllables():
+    from comenius.speechrate import spanish_syllables
+
+    cases = {
+        "Buenos días": 4,  # bue-nos dí-as
+        "¿Qué quieres?": 3,  # qué quie-res
+        "Hoy muy bien": 3,
+        "El país y la guía": 7,  # el pa-ís y la guí-a
+        "pingüino": 3,
+        "ahora leer": 5,  # a-ho-ra le-er
+    }
+    assert {text: spanish_syllables(text) for text in cases} == cases

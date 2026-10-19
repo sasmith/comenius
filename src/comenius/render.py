@@ -10,6 +10,7 @@ from pathlib import Path
 from .config import Config
 from .schema import LessonScript, Timeline
 from .sequence import build_timeline
+from .speechrate import dialog_rates
 from .tts import ClipCache
 from .voices import cast_for
 
@@ -19,6 +20,8 @@ class RenderResult:
     lesson_dir: Path
     timeline: Timeline
     files: dict[str, Path] = field(default_factory=dict)
+    # voice role -> ("provider:voice", syllables per second of full-speed dialog)
+    speech_rates: dict[str, tuple[str, float]] = field(default_factory=dict)
 
 
 def _mmss(seconds: float) -> str:
@@ -60,7 +63,12 @@ def render_lesson(
 
     # Durations come from real (cached) TTS clips, so pauses fit the actual audio.
     timeline = build_timeline(script, cfg.lesson, cache.duration)
-    result = RenderResult(lesson_dir=lesson_dir, timeline=timeline)
+    rates = dialog_rates(timeline, script.lang)
+    result = RenderResult(
+        lesson_dir=lesson_dir,
+        timeline=timeline,
+        speech_rates={role: (str(cast[role]), r) for role, r in rates.items()},
+    )
 
     def write(name: str, text: str) -> None:
         path = lesson_dir / name
@@ -98,6 +106,7 @@ def render_lesson(
         "learner_pause_s": round(timeline.learner_pause_s(), 1),
         "chapters": [c.model_dump() for c in timeline.chapters],
         "voices": {role: str(ref) for role, ref in cast.items()},
+        "syllables_per_s": rates,
         "rendered_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "files": sorted(result.files),
     }

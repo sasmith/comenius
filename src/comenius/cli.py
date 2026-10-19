@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 
 from .config import Config, ConfigError, load_config
 from .schema import LessonScript, LessonSpec
 from .state import LearnerState
+
+if TYPE_CHECKING:
+    from .render import RenderResult
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help=__doc__)
 
@@ -66,6 +69,7 @@ def render(
             f"{round(100 * t.learner_pause_s() / t.duration_s)}% learner pauses, "
             f"{len(t.segments)} segments"
         )
+        _echo_rates(result)
         for name in sorted(result.files):
             typer.echo(f"  {result.files[name]}")
 
@@ -145,6 +149,7 @@ def generate(
 
         result = render_lesson(script, cfg, provider=provider)
         typer.echo(f"  rendered to {result.lesson_dir}")
+        _echo_rates(result)
     if record:
         if not report.accepted:
             typer.echo(
@@ -175,6 +180,11 @@ def feed(
         raise typer.Exit(1) from None
     path = build_feed(out or cfg.out_dir, cfg.feed.site_dir, cfg.feed, base)
     typer.echo(f"Wrote {path}")
+
+
+def _echo_rates(result: RenderResult) -> None:
+    for role, (voice, rate) in sorted(result.speech_rates.items()):
+        typer.echo(f"  {role} ({voice}): {rate:.1f} syllables/s (native Spanish ~7.8)")
 
 
 def _publish(cfg: Config, out: Path | None = None) -> None:
