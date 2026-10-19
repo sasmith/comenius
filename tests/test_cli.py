@@ -1,8 +1,8 @@
 """The command-line loop end to end: state, queue, plan, feed, publish (mock S3)."""
 
 import boto3
-import typer
 import pytest
+import typer
 from moto import mock_aws
 from typer.testing import CliRunner
 
