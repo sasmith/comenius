@@ -186,6 +186,9 @@ measurably raise its coverage.
 
 ## Later (unscheduled)
 
+See [ROADMAP.md](ROADMAP.md) for the fuller list and suggested order.
+
+
 - Player app with headphone-button binary grading (FSRS) and optional speech
   recognition against expected answers.
 - Pronunciation assessment on recorded responses, reviewed after the session.

@@ -10,6 +10,7 @@ flashcards, and lessons can be published as a private podcast feed.
 
 - [Design](docs/DESIGN.md)
 - [Implementation plan](docs/PLAN.md)
+- [Roadmap](docs/ROADMAP.md)
 
 ## Setup
 
