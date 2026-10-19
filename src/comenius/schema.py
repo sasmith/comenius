@@ -8,12 +8,12 @@ Timeline     -> the sequencer's expansion of a script into timed audio segments
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Annotated, Literal
 
-import yaml
 from pydantic import BaseModel, Field, model_validator
+
+from .yamlio import load_yaml
 
 # Voice roles are abstract; config maps them to concrete provider voices.
 VoiceRole = Literal["narrator", "female_1", "male_1", "female_2", "male_2"]
@@ -134,26 +134,13 @@ class LessonScript(BaseModel):
         return [s.name for s in self.speakers] + self.foreign_terms
 
 
-class _Yaml12Bools(yaml.SafeLoader):
-    """YAML loader where only true/false are booleans, so words like no/sí/on stay strings."""
-
-
-_Yaml12Bools.yaml_implicit_resolvers = {
-    k: [(tag, rx) for tag, rx in v if tag != "tag:yaml.org,2002:bool"]
-    for k, v in yaml.SafeLoader.yaml_implicit_resolvers.items()
-}
-_Yaml12Bools.add_implicit_resolver(
-    "tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF")
-)
-
-
 class LessonSpec(BaseModel):
     """What the planner asks the generator to write."""
 
     @classmethod
     def from_file(cls, path: Path) -> LessonSpec:
         text = path.read_text(encoding="utf-8")
-        data = json.loads(text) if path.suffix == ".json" else yaml.load(text, _Yaml12Bools)
+        data = json.loads(text) if path.suffix == ".json" else load_yaml(text)
         return cls.model_validate(data)
 
     id: str

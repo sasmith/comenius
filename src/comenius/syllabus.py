@@ -10,8 +10,9 @@ from functools import cache
 from importlib import resources
 from typing import Literal
 
-import yaml
 from pydantic import BaseModel, Field, model_validator
+
+from .yamlio import load_yaml
 
 Level = Literal["A1", "A2", "B1", "B2", "C1", "C2"]
 
@@ -69,4 +70,4 @@ class Syllabus(BaseModel):
 @cache
 def load_syllabus(lang: str) -> Syllabus:
     text = resources.files("comenius.data.syllabus").joinpath(f"{lang}.yaml").read_text("utf-8")
-    return Syllabus.model_validate(yaml.safe_load(text))
+    return Syllabus.model_validate(load_yaml(text))
