@@ -94,6 +94,12 @@ class LLMConfig(BaseModel):
     cache_dir: Path = Path(".cache/llm")
 
 
+class StateConfig(BaseModel):
+    path: Path = Path("~/.local/share/comenius/state.db")
+    review_items: int = Field(5, description="Due items to put in each lesson's Review section.")
+    new_grammar_points: int = Field(1, description="New syllabus points per planned lesson.")
+
+
 class FeedConfig(BaseModel):
     title: str = "Comenius"
     description: str = "Generated audio language lessons."
@@ -106,6 +112,7 @@ class Config(BaseModel):
     lesson: LessonConfig = Field(default_factory=LessonConfig)
     tts: TTSConfig = Field(default_factory=TTSConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
+    state: StateConfig = Field(default_factory=StateConfig)
     feed: FeedConfig = Field(default_factory=FeedConfig)
 
 

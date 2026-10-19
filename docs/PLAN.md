@@ -16,7 +16,7 @@ with the least code. Each milestone ends with something to listen to.
 | M3 Curriculum constraints | Partial | Syllabus done (`src/comenius/data/syllabus/es.yaml`, 59 points A1→B1, `comenius syllabus`), used by generation and validation. Still to do: spaCy lemmatization, frequency bands, planner. |
 | M4 PDF + Anki | Done | Typst PDF with answer page; genanki deck with stable GUIDs and audio. |
 | M5 Podcast feed | Done (build only) | `comenius feed` writes a static site; upload with `aws s3 sync` or rclone. |
-| M6 Learner state | Not started | |
+| M6 Learner state | Partial | SQLite state (`comenius state add/show/assume`), lesson-count review schedule, and `comenius plan` (next syllabus point + known words + due reviews). Still to do: Anki review signal, lemmatized word tracking. |
 | M7 Target-book mode | Not started | |
 
 ## Principles

@@ -61,6 +61,23 @@ Generation runs code checks (new-word budget, required words, English-only
 narrator text, drill sanity) and a native-speaker review pass, regenerating up
 to three times. A `<id>.report.json` next to the script records what happened.
 
+### A course that builds on itself
+
+Learner state lives in a small SQLite database (`~/.local/share/comenius/state.db`
+by default). Record lessons as you do them, and plan the next one from it:
+
+```sh
+uv run comenius state assume --through es.a1.questions   # grammar you already know (optional)
+uv run comenius state add fixtures/lessons/es-0001.json  # record lessons you've done
+uv run comenius plan --topic "Dropping the kids off at school"   # -> specs/es-0002.yaml
+uv run comenius generate specs/es-0002.yaml --render --record
+uv run comenius state show                                # progress and what's due
+```
+
+A planned lesson teaches the next syllabus point, treats words from earlier lessons
+as known, and reviews lines and words that are due. Items come back for review
+after 1, 2, 4, 8, then 16 more lessons; each review moves an item to the next interval.
+
 Other commands:
 
 ```sh

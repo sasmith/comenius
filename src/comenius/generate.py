@@ -273,6 +273,8 @@ class Generator:
             response = self._generate_call(messages)
             tool_id, data = _tool_input(response, LESSON_TOOL)
             data = {**data, "id": spec.id, "lang": spec.lang, "dialect": spec.dialect}
+            if spec.grammar_points:  # the plan decides what the lesson teaches
+                data["grammar_points"] = list(spec.grammar_points)
             data["review"] = [r.model_dump() for r in spec.review]
 
             problems: list[str] = []

@@ -37,6 +37,11 @@ kokoro_dir = "~/.cache/comenius/kokoro"
 model = "claude-sonnet-5-5"
 max_attempts = 3
 
+[state]
+path = "~/.local/share/comenius/state.db"   # learner state (lessons done, review schedule)
+review_items = 5              # due items reviewed per lesson
+new_grammar_points = 1        # syllabus points introduced per planned lesson
+
 [feed]
 title = "Comenius: Spanish"
 description = "Generated audio Spanish lessons."
