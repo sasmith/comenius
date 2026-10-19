@@ -18,6 +18,8 @@ Severity = Literal["error", "warning"]
 # English-only fields are read by the English narrator voice.
 _NON_ENGLISH_MARKS = set("¿¡ñÑ")
 
+ARTICLES_ES = {"el", "la", "los", "las", "un", "una", "unos", "unas"}
+
 # A small allowlist of Spanish function words assumed known from lesson one.
 FUNCTION_WORDS_ES = set(
     """
@@ -66,6 +68,7 @@ def validate_script(script: LessonScript, spec: LessonSpec | None = None) -> lis
     for drill in script.drills:
         if isinstance(drill, TranslationDrill):
             english_fields += [("translation.prompt_en", it.prompt_en) for it in drill.items]
+            english_fields += [("translation.pattern", drill.pattern)]
     for where, text in english_fields:
         if _NON_ENGLISH_MARKS & set(text):
             err("non_english_text", f"{where} must be English only (read by narrator): {text!r}")
@@ -86,10 +89,19 @@ def validate_script(script: LessonScript, spec: LessonSpec | None = None) -> lis
         if isinstance(drill, SubstitutionDrill):
             if len(drill.items) < 2:
                 warn("short_drill", f"substitution drill {d_i} has fewer than 2 items")
-            for item in drill.items:
-                if fold_accents(item.answer.lower()) == fold_accents(drill.model.lower()):
-                    err("substitution_unchanged", f"answer equals model: {item.answer!r}")
-                if not _contains(item.answer, item.cue):
+            for item, base in zip(drill.items, drill.bases(), strict=True):
+                if fold_accents(item.answer.lower()) == fold_accents(base.lower()):
+                    err(
+                        "substitution_unchanged",
+                        f"{drill.mode} drill: answer {item.answer!r} doesn't change {base!r}",
+                    )
+                if drill.mode == "gender" and tokens(item.cue)[0] in ARTICLES_ES:
+                    err(
+                        "gender_cue_has_article",
+                        f"gender drill cue {item.cue!r} must be a bare noun, without an article",
+                    )
+                # Progressive cues are often lemmas (querer -> quiero), so don't require them.
+                if drill.mode != "progressive" and not _contains(item.answer, item.cue):
                     warn(
                         "cue_not_in_answer",
                         f"cue {item.cue!r} not found in answer {item.answer!r}",
@@ -117,18 +129,33 @@ def validate_script(script: LessonScript, spec: LessonSpec | None = None) -> lis
     for req in spec.required_words:
         if fold_accents(req.lower()) not in lemmas and not _contains(dialog_text, req):
             err("missing_required_word", f"required word {req!r} is not used")
-    subs = sum(isinstance(d, SubstitutionDrill) for d in script.drills)
-    if subs < spec.substitution_drills:
+    subs = [d for d in script.drills if isinstance(d, SubstitutionDrill)]
+    for mode, need in (("gender", spec.gender_drills), ("progressive", spec.progressive_drills)):
+        have = sum(d.mode == mode for d in subs)
+        if have < need:
+            err(f"too_few_{mode}_drills", f"{have} {mode} substitution drills; need {need}")
+    lo, hi = spec.substitution_items
+    for d in subs:
+        if not lo <= len(d.items) <= hi:
+            err(
+                "substitution_item_count",
+                f"{d.mode} drill {d.model!r} has {len(d.items)} cues; need {lo}-{hi}",
+            )
+    trans = [d for d in script.drills if isinstance(d, TranslationDrill)]
+    if len(trans) < spec.translation_patterns:
         err(
-            "too_few_substitution_drills",
-            f"{subs} substitution drills; need {spec.substitution_drills}",
+            "too_few_translation_patterns",
+            f"{len(trans)} translation groups; need {spec.translation_patterns}",
         )
-    n_trans = sum(len(d.items) for d in script.drills if isinstance(d, TranslationDrill))
-    if n_trans < spec.translation_items:
-        err(
-            "too_few_translation_items",
-            f"{n_trans} translation items; need {spec.translation_items}",
-        )
+    lo, hi = spec.translation_items_per_pattern
+    for d in trans:
+        if not lo <= len(d.items) <= hi:
+            err(
+                "translation_item_count",
+                f"translation group {d.pattern!r} has {len(d.items)} prompts; need {lo}-{hi}",
+            )
+        if not d.pattern:
+            warn("translation_pattern_missing", "translation group has no pattern description")
     allowed = set(spec.grammar_points)
     for i, line in enumerate(script.dialog):
         extra = set(line.grammar_tags) - allowed

@@ -29,7 +29,7 @@ def test_render_all_outputs(script, tmp_path):
         check=True,
     )
     info = json.loads(probe.stdout)
-    assert len(info["chapters"]) == len(result.timeline.chapters) == 8
+    assert len(info["chapters"]) == len(result.timeline.chapters) == 9
     assert abs(float(info["format"]["duration"]) - result.timeline.duration_s) < 1.0
 
     assert result.files["lesson.pdf"].read_bytes().startswith(b"%PDF")

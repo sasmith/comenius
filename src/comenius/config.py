@@ -90,7 +90,7 @@ class LLMConfig(BaseModel):
     model: str = "claude-sonnet-5-5"
     review_model: str | None = None
     max_attempts: int = 3
-    max_tokens: int = 8000
+    max_tokens: int = 16000
     cache_dir: Path = Path(".cache/llm")
 
 

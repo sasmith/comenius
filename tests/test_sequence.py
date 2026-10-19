@@ -43,16 +43,20 @@ def test_buildup_crosses_sentences_at_phrase_boundaries():
 
 def test_sections_are_signposted(script):
     narr = [s.text for s in build_timeline(script).segments if s.voice == "narrator"]
-    for sign in (
-        "Dialog. Listen.",
-        "Dialog. Repeat to learn.",
-        "Dialog. Repeat for mastery.",
-        "Substitution drills.",
-        "Translation drills.",
+    for start in (
+        "Now let's build it up",
+        "Now the whole conversation again",
+        "Now swap in a new noun",
+        "Now swap in a new word",
+        "Now say these in Spanish",
     ):
-        assert sign in narr
+        assert any(t.startswith(start) for t in narr), start
+    # The first dialog follows the English intro directly, with no signpost
+    segs = build_timeline(script).segments
+    first_dialog = next(i for i, s in enumerate(segs) if s.kind == "dialog")
+    assert segs[first_dialog - 1].text == script.setting
     quiet = LessonConfig(signposts=False)
-    assert "Substitution drills." not in [s.text for s in build_timeline(script, quiet).segments]
+    assert not any(s.text.startswith("Now swap") for s in build_timeline(script, quiet).segments)
 
 
 def test_both_repetitions_get_the_same_pause(script):
@@ -88,10 +92,11 @@ def test_timeline_structure(script):
     assert titles == [
         "Introduction",
         "Listen",
-        "Repeat to learn",
-        "Repeat for mastery",
-        "Substitution drills",
-        "Translation drills",
+        "Line by line",
+        "Your turn",
+        "Noun genders",
+        "Swap a word",
+        "Say it in Spanish",
         "Review",
         "Listen again",
     ]
@@ -151,7 +156,8 @@ def test_golden_timeline(script):
 
 
 def test_default_narration_is_minimal(script):
-    narr = [s.text for s in build_timeline(script).segments if s.voice == "narrator"]
+    cfg = LessonConfig(signposts=False)
+    narr = [s.text for s in build_timeline(script, cfg).segments if s.voice == "narrator"]
     # Only the intro and English recall/translation cues remain
     assert not any(t.startswith(("Now", "Listen", "The word for", "Here's")) for t in narr)
     assert not any(" says: " in t for t in narr)
@@ -165,5 +171,15 @@ def test_narration_flags_restore_english(script):
     narr = [s.text for s in build_timeline(script, cfg).segments if s.voice == "narrator"]
     assert any(" says: " in t for t in narr)
     assert any(t.startswith("The word for") for t in narr)
-    assert any(t.startswith("Now I'll give you a word") for t in narr)
+    assert "Practice this sentence." in narr
     assert any(t.startswith("How do you say") for t in narr)
+
+
+def test_progressive_drill_cues_chain_from_previous_answer(script):
+    t = build_timeline(script)
+    segs = t.segments
+    cues = [(s.text, segs[i + 1].text) for i, s in enumerate(segs) if s.kind == "drill_cue"]
+    assert ("querer", "Quiero una bicicleta.") in cues
+    i = cues.index(("querer", "Quiero una bicicleta."))
+    assert cues[i + 1] == ("gato", "Quiero un gato.")
+    assert cues[i + 2] == ("algunos", "Quiero algunos gatos.")

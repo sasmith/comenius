@@ -65,13 +65,16 @@ vocabulary.
 
 ### 4.1 During a run or drive (audio)
 
-A typical 10–20 minute lesson. Each section is announced with a short English
-signpost ("Dialog. Listen.", "Dialog. Repeat to learn.", "Dialog. Repeat for
-mastery.", "Substitution drills.", "Translation drills."):
+A typical 10–20 minute lesson. After the first dialog, each section opens with
+a one-sentence English signpost that says what to do ("Now let's build it up,
+line by line. Repeat each phrase after the speaker."). Chapter markers in the
+MP3 carry the short section names (Listen, Line by line, Your turn, Noun
+genders, Swap a word, Say it in Spanish, Review, Listen again):
 
 1. **Intro** (narrator, English): the situation and who's speaking.
-2. **Dialog at natural speed**, once, in two distinct voices.
-3. **Repeat to learn**: backward build-up of each whole line, with no English:
+2. **Listen**: the dialog at natural speed, once, in two distinct voices, right
+   after the intro with no signpost.
+3. **Line by line**: backward build-up of each whole line, with no English:
    > *puedo ayudar* … *qué le puedo ayudar* … *¿En qué le puedo ayudar?* …
    > *Buenas tardes. ¿En qué le puedo ayudar?*
 
@@ -82,11 +85,21 @@ mastery.", "Substitution drills.", "Translation drills."):
    Meaning comes from context, the intro, and the PDF; there are no English
    line translations, new-word glosses, or instructions like "now the whole
    line" (each can be turned back on in config).
-4. **Repeat for mastery**: the full dialog again, with a pause after each line
+4. **Your turn**: the full dialog again, with a pause after each line
    to say it yourself.
-5. **Substitution drills**: a model sentence, then cue words to swap in;
-   learner produces the new sentence in the pause; correct answer follows.
-6. **Translation drills**: English prompt → pause → target-language answer.
+5. **Substitution drills**: a model sentence, then 8–12 cues; the learner says
+   the new sentence in the pause, then hears it. Two sections:
+   - **Noun genders**: each cue is a bare noun (*carro*, not *el carro*); the
+     learner supplies the article: *Necesito arreglar la llanta* → (carro) →
+     *Necesito arreglar el carro*.
+   - **Swap a word** (progressive): each cue changes one element of the
+     previous answer, across parts of speech: *Tengo una bicicleta* →
+     (querer) *Quiero una bicicleta* → (gato) *Quiero un gato* → (algunos)
+     *Quiero algunos gatos*.
+   Default: one gender drill and two progressive drills (3 model sentences).
+6. **Say it in Spanish** (translation): groups of 4–6 English prompts that share
+   one structure but vary subject, verb, object, and polarity ("I need to fix
+   my bike", "We need to fix the car", "I don't need to buy a bike").
 7. **No separate in-lesson recall by default.** Build-up, repeat-for-mastery,
    and the drills already retrieve each line several times at growing gaps;
    the spacing that matters more is across days (replaying a lesson, and

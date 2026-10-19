@@ -42,11 +42,31 @@ class SubstitutionItem(BaseModel):
     answer: str = Field(description="The full new sentence.")
 
 
+SubstitutionMode = Literal["simple", "gender", "progressive"]
+
+
 class SubstitutionDrill(BaseModel):
+    """A model sentence and cues to substitute into it.
+
+    simple:      each cue is swapped into the model sentence.
+    gender:      each cue is a bare noun (no article) swapped into the model sentence;
+                 the learner supplies the article and agreement (noun-gender practice).
+    progressive: each cue changes one element of the previous answer (verb as an
+                 infinitive, noun, determiner, subject, adjective, ...); the first cue
+                 changes the model.
+    """
+
     type: Literal["substitution"] = "substitution"
+    mode: SubstitutionMode = "simple"
     model: str = Field(description="The model sentence in the target language.")
     model_translation: str = ""
     items: list[SubstitutionItem] = Field(min_length=1)
+
+    def bases(self) -> list[str]:
+        """The sentence each item's cue is applied to."""
+        if self.mode == "progressive":
+            return [self.model] + [it.answer for it in self.items[:-1]]
+        return [self.model] * len(self.items)
 
 
 class TranslationItem(BaseModel):
@@ -55,7 +75,12 @@ class TranslationItem(BaseModel):
 
 
 class TranslationDrill(BaseModel):
+    """English prompts that all exercise one structure, with varied words."""
+
     type: Literal["translation"] = "translation"
+    pattern: str = Field(
+        default="", description="The shared structure in English, e.g. 'need to + verb'."
+    )
     items: list[TranslationItem] = Field(min_length=1)
 
 
@@ -113,8 +138,14 @@ class LessonSpec(BaseModel):
     review: list[ReviewItem] = Field(default_factory=list)
     dialog_lines: tuple[int, int] = (6, 10)
     max_words_per_line: int = 14
-    substitution_drills: int = 2
-    translation_items: int = 6
+    gender_drills: int = 1
+    progressive_drills: int = 2
+    substitution_items: tuple[int, int] = (8, 12)
+    translation_patterns: int = 3
+    translation_items_per_pattern: tuple[int, int] = (4, 6)
+
+
+LANG_NAMES = {"es": "Spanish", "fr": "French", "de": "German", "it": "Italian", "pt": "Portuguese"}
 
 
 # ---------------------------------------------------------------------------

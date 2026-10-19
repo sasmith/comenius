@@ -5,67 +5,392 @@
   "title": "At the bike shop",
   "setting": "Ana brings her bike to a neighborhood repair shop. The mechanic, Don Luis, greets her.",
   "speakers": [
-    {"id": "L", "name": "Don Luis", "voice_role": "male_1"},
-    {"id": "A", "name": "Ana", "voice_role": "female_1"}
+    {
+      "id": "L",
+      "name": "Don Luis",
+      "voice_role": "male_1"
+    },
+    {
+      "id": "A",
+      "name": "Ana",
+      "voice_role": "female_1"
+    }
   ],
-  "grammar_points": ["es.a1.necesitar_inf", "es.a1.usted", "es.a1.cuanto_cuesta"],
+  "grammar_points": [
+    "es.a1.necesitar_inf",
+    "es.a1.usted",
+    "es.a1.cuanto_cuesta"
+  ],
   "new_words": [
-    {"lemma": "ayudar", "pos": "VERB", "gloss": "to help"},
-    {"lemma": "arreglar", "pos": "VERB", "gloss": "to fix, to repair"},
-    {"lemma": "bicicleta", "pos": "NOUN", "gloss": "bicycle"},
-    {"lemma": "pasar", "form": "pasa", "pos": "VERB", "gloss": "to happen"},
-    {"lemma": "llanta", "pos": "NOUN", "gloss": "tire"},
-    {"lemma": "ponchado", "form": "ponchada", "pos": "ADJ", "gloss": "punctured, flat (Mexico)"},
-    {"lemma": "mañana", "pos": "ADV", "gloss": "tomorrow"},
-    {"lemma": "costar", "form": "cuesta", "pos": "VERB", "gloss": "to cost"}
+    {
+      "lemma": "ayudar",
+      "pos": "VERB",
+      "gloss": "to help"
+    },
+    {
+      "lemma": "arreglar",
+      "pos": "VERB",
+      "gloss": "to fix, to repair"
+    },
+    {
+      "lemma": "bicicleta",
+      "pos": "NOUN",
+      "gloss": "bicycle"
+    },
+    {
+      "lemma": "pasar",
+      "form": "pasa",
+      "pos": "VERB",
+      "gloss": "to happen"
+    },
+    {
+      "lemma": "llanta",
+      "pos": "NOUN",
+      "gloss": "tire"
+    },
+    {
+      "lemma": "ponchado",
+      "form": "ponchada",
+      "pos": "ADJ",
+      "gloss": "punctured, flat (Mexico)"
+    },
+    {
+      "lemma": "mañana",
+      "pos": "ADV",
+      "gloss": "tomorrow"
+    },
+    {
+      "lemma": "costar",
+      "form": "cuesta",
+      "pos": "VERB",
+      "gloss": "to cost"
+    }
   ],
   "dialog": [
-    {"speaker": "L", "text": "Buenas tardes. ¿En qué le puedo ayudar?",
-     "translation": "Good afternoon. How can I help you?", "grammar_tags": ["es.a1.usted"]},
-    {"speaker": "A", "text": "Buenas tardes. Necesito arreglar mi bicicleta.",
-     "translation": "Good afternoon. I need to fix my bike.", "grammar_tags": ["es.a1.necesitar_inf"]},
-    {"speaker": "L", "text": "¿Qué le pasa?",
-     "translation": "What's wrong with it?", "grammar_tags": []},
-    {"speaker": "A", "text": "Tiene una llanta ponchada.",
-     "translation": "It has a flat tire.", "grammar_tags": []},
-    {"speaker": "L", "text": "Muy bien. ¿Para cuándo la necesita?",
-     "translation": "All right. When do you need it by?", "grammar_tags": ["es.a1.usted"]},
-    {"speaker": "A", "text": "Para mañana, por favor. ¿Cuánto cuesta?",
-     "translation": "By tomorrow, please. How much does it cost?", "grammar_tags": ["es.a1.cuanto_cuesta"]},
-    {"speaker": "L", "text": "Son cien pesos.",
-     "translation": "It's a hundred pesos.", "grammar_tags": []},
-    {"speaker": "A", "text": "Perfecto. Muchas gracias.",
-     "translation": "Perfect. Thank you very much.", "grammar_tags": []}
+    {
+      "speaker": "L",
+      "text": "Buenas tardes. ¿En qué le puedo ayudar?",
+      "translation": "Good afternoon. How can I help you?",
+      "grammar_tags": [
+        "es.a1.usted"
+      ]
+    },
+    {
+      "speaker": "A",
+      "text": "Buenas tardes. Necesito arreglar mi bicicleta.",
+      "translation": "Good afternoon. I need to fix my bike.",
+      "grammar_tags": [
+        "es.a1.necesitar_inf"
+      ]
+    },
+    {
+      "speaker": "L",
+      "text": "¿Qué le pasa?",
+      "translation": "What's wrong with it?",
+      "grammar_tags": []
+    },
+    {
+      "speaker": "A",
+      "text": "Tiene una llanta ponchada.",
+      "translation": "It has a flat tire.",
+      "grammar_tags": []
+    },
+    {
+      "speaker": "L",
+      "text": "Muy bien. ¿Para cuándo la necesita?",
+      "translation": "All right. When do you need it by?",
+      "grammar_tags": [
+        "es.a1.usted"
+      ]
+    },
+    {
+      "speaker": "A",
+      "text": "Para mañana, por favor. ¿Cuánto cuesta?",
+      "translation": "By tomorrow, please. How much does it cost?",
+      "grammar_tags": [
+        "es.a1.cuanto_cuesta"
+      ]
+    },
+    {
+      "speaker": "L",
+      "text": "Son cien pesos.",
+      "translation": "It's a hundred pesos.",
+      "grammar_tags": []
+    },
+    {
+      "speaker": "A",
+      "text": "Perfecto. Muchas gracias.",
+      "translation": "Perfect. Thank you very much.",
+      "grammar_tags": []
+    }
   ],
   "grammar_note": "Necesitar + infinitive means 'to need to do something': necesito arreglar, necesito comprar. Don Luis uses usted, the polite 'you': ¿En qué le puedo ayudar? and ¿Para cuándo la necesita? In Mexico a flat tire is una llanta ponchada.",
   "drills": [
-    {"type": "substitution", "model": "Necesito arreglar mi bicicleta.",
-     "model_translation": "I need to fix my bike.",
-     "items": [
-       {"cue": "coche", "answer": "Necesito arreglar mi coche."},
-       {"cue": "teléfono", "answer": "Necesito arreglar mi teléfono."},
-       {"cue": "computadora", "answer": "Necesito arreglar mi computadora."}
-     ]},
-    {"type": "substitution", "model": "¿Cuánto cuesta la llanta?",
-     "model_translation": "How much is the tire?",
-     "items": [
-       {"cue": "la bicicleta", "answer": "¿Cuánto cuesta la bicicleta?"},
-       {"cue": "el café", "answer": "¿Cuánto cuesta el café?"},
-       {"cue": "el boleto", "answer": "¿Cuánto cuesta el boleto?"}
-     ]},
-    {"type": "translation",
-     "items": [
-       {"prompt_en": "I need to fix my car.", "answers": ["Necesito arreglar mi coche."]},
-       {"prompt_en": "What's wrong with it?", "answers": ["¿Qué le pasa?"]},
-       {"prompt_en": "It has a flat tire.", "answers": ["Tiene una llanta ponchada."]},
-       {"prompt_en": "By tomorrow, please.", "answers": ["Para mañana, por favor."]},
-       {"prompt_en": "How much does it cost?", "answers": ["¿Cuánto cuesta?"]},
-       {"prompt_en": "How can I help you?", "answers": ["¿En qué le puedo ayudar?"]}
-     ]}
+    {
+      "type": "substitution",
+      "mode": "gender",
+      "model": "Necesito arreglar la llanta.",
+      "model_translation": "I need to fix the tire.",
+      "items": [
+        {
+          "cue": "bicicleta",
+          "answer": "Necesito arreglar la bicicleta."
+        },
+        {
+          "cue": "carro",
+          "answer": "Necesito arreglar el carro."
+        },
+        {
+          "cue": "computadora",
+          "answer": "Necesito arreglar la computadora."
+        },
+        {
+          "cue": "teléfono",
+          "answer": "Necesito arreglar el teléfono."
+        },
+        {
+          "cue": "puerta",
+          "answer": "Necesito arreglar la puerta."
+        },
+        {
+          "cue": "reloj",
+          "answer": "Necesito arreglar el reloj."
+        },
+        {
+          "cue": "problema",
+          "answer": "Necesito arreglar el problema."
+        },
+        {
+          "cue": "lámpara",
+          "answer": "Necesito arreglar la lámpara."
+        },
+        {
+          "cue": "sistema",
+          "answer": "Necesito arreglar el sistema."
+        },
+        {
+          "cue": "silla",
+          "answer": "Necesito arreglar la silla."
+        }
+      ]
+    },
+    {
+      "type": "substitution",
+      "mode": "progressive",
+      "model": "Tengo una bicicleta.",
+      "model_translation": "I have a bike.",
+      "items": [
+        {
+          "cue": "querer",
+          "answer": "Quiero una bicicleta."
+        },
+        {
+          "cue": "gato",
+          "answer": "Quiero un gato."
+        },
+        {
+          "cue": "algunos",
+          "answer": "Quiero algunos gatos."
+        },
+        {
+          "cue": "nosotros",
+          "answer": "Queremos algunos gatos."
+        },
+        {
+          "cue": "buscar",
+          "answer": "Buscamos algunos gatos."
+        },
+        {
+          "cue": "perro",
+          "answer": "Buscamos algunos perros."
+        },
+        {
+          "cue": "dos",
+          "answer": "Buscamos dos perros."
+        },
+        {
+          "cue": "ella",
+          "answer": "Busca dos perros."
+        },
+        {
+          "cue": "pequeño",
+          "answer": "Busca dos perros pequeños."
+        },
+        {
+          "cue": "tener",
+          "answer": "Tiene dos perros pequeños."
+        }
+      ]
+    },
+    {
+      "type": "substitution",
+      "mode": "progressive",
+      "model": "¿Cuánto cuesta la llanta?",
+      "model_translation": "How much is the tire?",
+      "items": [
+        {
+          "cue": "bicicleta",
+          "answer": "¿Cuánto cuesta la bicicleta?"
+        },
+        {
+          "cue": "las",
+          "answer": "¿Cuánto cuestan las bicicletas?"
+        },
+        {
+          "cue": "casco",
+          "answer": "¿Cuánto cuestan los cascos?"
+        },
+        {
+          "cue": "este",
+          "answer": "¿Cuánto cuesta este casco?"
+        },
+        {
+          "cue": "nuevo",
+          "answer": "¿Cuánto cuesta este casco nuevo?"
+        },
+        {
+          "cue": "mochila",
+          "answer": "¿Cuánto cuesta esta mochila nueva?"
+        },
+        {
+          "cue": "estas",
+          "answer": "¿Cuánto cuestan estas mochilas nuevas?"
+        },
+        {
+          "cue": "arreglar",
+          "answer": "¿Cuánto cuesta arreglar estas mochilas nuevas?"
+        },
+        {
+          "cue": "llanta",
+          "answer": "¿Cuánto cuesta arreglar estas llantas nuevas?"
+        },
+        {
+          "cue": "una",
+          "answer": "¿Cuánto cuesta arreglar una llanta nueva?"
+        }
+      ]
+    },
+    {
+      "type": "translation",
+      "pattern": "need to + verb",
+      "items": [
+        {
+          "prompt_en": "I need to fix my bike.",
+          "answers": [
+            "Necesito arreglar mi bicicleta."
+          ]
+        },
+        {
+          "prompt_en": "I need to buy a tire.",
+          "answers": [
+            "Necesito comprar una llanta."
+          ]
+        },
+        {
+          "prompt_en": "We need to fix the car.",
+          "answers": [
+            "Necesitamos arreglar el carro."
+          ]
+        },
+        {
+          "prompt_en": "Do you need to fix your phone?",
+          "answers": [
+            "¿Necesita arreglar su teléfono?"
+          ]
+        },
+        {
+          "prompt_en": "I don't need to buy a bike.",
+          "answers": [
+            "No necesito comprar una bicicleta."
+          ]
+        }
+      ]
+    },
+    {
+      "type": "translation",
+      "pattern": "How much does it cost?",
+      "items": [
+        {
+          "prompt_en": "How much does the tire cost?",
+          "answers": [
+            "¿Cuánto cuesta la llanta?"
+          ]
+        },
+        {
+          "prompt_en": "How much do the tires cost?",
+          "answers": [
+            "¿Cuánto cuestan las llantas?"
+          ]
+        },
+        {
+          "prompt_en": "How much does it cost to fix the bike?",
+          "answers": [
+            "¿Cuánto cuesta arreglar la bicicleta?"
+          ]
+        },
+        {
+          "prompt_en": "How much does the helmet cost?",
+          "answers": [
+            "¿Cuánto cuesta el casco?"
+          ]
+        },
+        {
+          "prompt_en": "How much do the helmets cost?",
+          "answers": [
+            "¿Cuánto cuestan los cascos?"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "translation",
+      "pattern": "by + a time (para)",
+      "items": [
+        {
+          "prompt_en": "By tomorrow, please.",
+          "answers": [
+            "Para mañana, por favor."
+          ]
+        },
+        {
+          "prompt_en": "I need the bike by tomorrow.",
+          "answers": [
+            "Necesito la bicicleta para mañana."
+          ]
+        },
+        {
+          "prompt_en": "I need the car by Friday.",
+          "answers": [
+            "Necesito el carro para el viernes."
+          ]
+        },
+        {
+          "prompt_en": "When do you need the car by?",
+          "answers": [
+            "¿Para cuándo necesita el carro?"
+          ]
+        },
+        {
+          "prompt_en": "We don't need the bike by tomorrow.",
+          "answers": [
+            "No necesitamos la bicicleta para mañana."
+          ]
+        }
+      ]
+    }
   ],
   "review": [
-    {"prompt_en": "Good morning.", "answer": "Buenos días."},
-    {"prompt_en": "Where is the station?", "answer": "¿Dónde está la estación?"},
-    {"prompt_en": "Thank you very much.", "answer": "Muchas gracias."}
+    {
+      "prompt_en": "Good morning.",
+      "answer": "Buenos días."
+    },
+    {
+      "prompt_en": "Where is the station?",
+      "answer": "¿Dónde está la estación?"
+    },
+    {
+      "prompt_en": "Thank you very much.",
+      "answer": "Muchas gracias."
+    }
   ]
 }

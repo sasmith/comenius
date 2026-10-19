@@ -1,114 +1,182 @@
     0.00 narration    narrator   0.50 At the bike shop.
     1.71 narration    narrator   0.50 Ana brings her bike to a neighborhood repair shop. The mechanic, Don Luis, greets her.
-    9.11 narration    narrator   1.50 Dialog. Listen.
-   11.68 dialog       male_1     0.70 Buenas tardes. ¿En qué le puedo ayudar?
-   15.16 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
-   19.15 dialog       male_1     0.70 ¿Qué le pasa?
-   20.78 dialog       female_1   0.70 Tiene una llanta ponchada.
-   23.34 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
-   26.54 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
-   30.02 dialog       male_1     0.70 Son cien pesos.
-   31.79 dialog       female_1   0.70 Perfecto. Muchas gracias.
-   35.78 narration    narrator   1.50 Dialog. Repeat to learn.
-   38.99 preview      male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
-   46.96 buildup      male_1     2.43 puedo ayudar
-   50.34 buildup      male_1     2.43 puedo ayudar
-   53.72 buildup      male_1     3.26 qué le puedo ayudar
-   58.49 buildup      male_1     3.26 qué le puedo ayudar
-   63.26 buildup      male_1     3.86 ¿En qué le puedo ayudar?
-   69.02 buildup      male_1     3.86 ¿En qué le puedo ayudar?
-   74.78 buildup      male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
-   82.75 buildup      male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
-   91.41 preview      female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
-  100.63 buildup      female_1   2.43 mi bicicleta
-  104.01 buildup      female_1   2.43 mi bicicleta
-  107.39 buildup      female_1   3.50 arreglar mi bicicleta
-  112.56 buildup      female_1   3.50 arreglar mi bicicleta
-  117.72 buildup      female_1   4.69 Necesito arreglar mi bicicleta.
-  124.87 buildup      female_1   4.69 Necesito arreglar mi bicicleta.
-  132.02 buildup      female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
-  141.24 buildup      female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
-  151.15 buildup      male_1     2.39 ¿Qué le pasa?
-  154.47 buildup      male_1     2.39 ¿Qué le pasa?
-  158.50 preview      female_1   3.79 Tiene una llanta ponchada.
-  164.14 buildup      female_1   2.79 llanta ponchada
-  168.11 buildup      female_1   2.79 llanta ponchada
-  172.09 buildup      female_1   3.26 una llanta ponchada
-  176.86 buildup      female_1   3.26 una llanta ponchada
-  181.63 buildup      female_1   3.79 Tiene una llanta ponchada.
-  187.27 buildup      female_1   3.79 Tiene una llanta ponchada.
-  193.61 preview      male_1     4.75 Muy bien. ¿Para cuándo la necesita?
-  200.86 buildup      male_1     2.31 la necesita
-  204.04 buildup      male_1     2.31 la necesita
-  207.23 buildup      male_1     3.14 cuándo la necesita
-  211.80 buildup      male_1     3.14 cuándo la necesita
-  216.37 buildup      male_1     3.98 ¿Para cuándo la necesita?
-  222.33 buildup      male_1     3.98 ¿Para cuándo la necesita?
-  228.29 buildup      male_1     4.75 Muy bien. ¿Para cuándo la necesita?
-  235.54 buildup      male_1     4.75 Muy bien. ¿Para cuándo la necesita?
-  243.49 preview      female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
-  251.46 buildup      female_1   2.79 ¿Cuánto cuesta?
-  255.43 buildup      female_1   2.79 ¿Cuánto cuesta?
-  259.41 buildup      female_1   4.09 por favor. ¿Cuánto cuesta?
-  265.56 buildup      female_1   4.09 por favor. ¿Cuánto cuesta?
-  271.72 buildup      female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
-  279.69 buildup      female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
-  288.35 buildup      male_1     2.61 Son cien pesos.
-  292.03 buildup      male_1     2.61 Son cien pesos.
-  296.41 buildup      female_1   3.68 Perfecto. Muchas gracias.
-  301.87 buildup      female_1   3.68 Perfecto. Muchas gracias.
-  308.84 narration    narrator   1.50 Dialog. Repeat for mastery.
-  312.27 shadow       male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
-  320.23 shadow       female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
-  329.45 shadow       male_1     2.39 ¿Qué le pasa?
-  332.77 shadow       female_1   3.79 Tiene una llanta ponchada.
-  338.41 shadow       male_1     4.75 Muy bien. ¿Para cuándo la necesita?
-  345.66 shadow       female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
-  353.63 shadow       male_1     2.61 Son cien pesos.
-  357.30 shadow       female_1   3.68 Perfecto. Muchas gracias.
-  364.27 narration    narrator   1.50 Substitution drills.
-  367.20 buildup      male_1     4.32 Necesito arreglar mi bicicleta.
-  373.73 buildup      male_1     4.32 Necesito arreglar mi bicicleta.
-  380.27 drill_cue    male_1     3.89 coche
-  384.56 drill_answer male_1     1.50 Necesito arreglar mi coche.
-  387.99 drill_cue    male_1     4.21 teléfono
-  392.77 drill_answer male_1     1.50 Necesito arreglar mi teléfono.
-  396.42 drill_cue    male_1     4.54 computadora
-  401.74 drill_answer male_1     1.50 Necesito arreglar mi computadora.
-  405.60 buildup      female_1   3.68 ¿Cuánto cuesta la llanta?
-  411.06 buildup      female_1   3.68 ¿Cuánto cuesta la llanta?
-  416.53 drill_cue    female_1   4.00 la bicicleta
-  421.38 drill_answer female_1   1.50 ¿Cuánto cuesta la bicicleta?
-  424.88 drill_cue    female_1   3.46 el café
-  428.85 drill_answer female_1   1.50 ¿Cuánto cuesta el café?
-  431.99 drill_cue    female_1   3.68 el boleto
-  436.31 drill_answer female_1   1.50 ¿Cuánto cuesta el boleto?
-  441.10 narration    narrator   1.50 Translation drills.
-  443.96 drill_cue    narrator   3.89 I need to fix my car.
-  449.35 drill_answer male_1     1.50 Necesito arreglar mi coche.
-  452.78 drill_cue    narrator   2.39 What's wrong with it?
-  456.67 drill_answer female_1   1.50 ¿Qué le pasa?
-  459.10 drill_cue    narrator   3.79 It has a flat tire.
-  464.24 drill_answer male_1     1.50 Tiene una llanta ponchada.
-  467.60 drill_cue    narrator   3.46 By tomorrow, please.
-  472.49 drill_answer female_1   1.50 Para mañana, por favor.
-  475.64 drill_cue    narrator   2.61 How much does it cost?
-  479.81 drill_answer male_1     1.50 ¿Cuánto cuesta?
-  482.39 drill_cue    narrator   3.57 How can I help you?
-  487.31 drill_answer female_1   1.50 ¿En qué le puedo ayudar?
-  492.03 narration    narrator   1.50 Review.
-  494.03 review       narrator   2.29 Good morning.
-  497.24 drill_answer male_1     1.50 Buenos días.
-  499.60 review       narrator   3.57 Where is the station?
-  504.67 drill_answer female_1   1.50 ¿Dónde está la estación?
-  507.88 review       narrator   2.61 Thank you very much.
-  511.92 drill_answer male_1     1.50 Muchas gracias.
-  515.99 narration    narrator   1.50 Dialog. Listen again.
-  518.99 dialog       male_1     0.70 Buenas tardes. ¿En qué le puedo ayudar?
-  522.48 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
-  526.46 dialog       male_1     0.70 ¿Qué le pasa?
-  528.09 dialog       female_1   0.70 Tiene una llanta ponchada.
-  530.65 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
-  533.85 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
-  537.34 dialog       male_1     0.70 Son cien pesos.
-  539.11 dialog       female_1   0.70 Perfecto. Muchas gracias.
+    9.11 dialog       male_1     0.70 Buenas tardes. ¿En qué le puedo ayudar?
+   12.59 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
+   16.58 dialog       male_1     0.70 ¿Qué le pasa?
+   18.21 dialog       female_1   0.70 Tiene una llanta ponchada.
+   20.77 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
+   23.96 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
+   27.45 dialog       male_1     0.70 Son cien pesos.
+   29.22 dialog       female_1   0.70 Perfecto. Muchas gracias.
+   33.21 narration    narrator   1.50 Now let's build it up, line by line. Repeat each phrase after the speaker.
+   39.99 preview      male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
+   47.96 buildup      male_1     2.43 puedo ayudar
+   51.34 buildup      male_1     2.43 puedo ayudar
+   54.72 buildup      male_1     3.26 qué le puedo ayudar
+   59.49 buildup      male_1     3.26 qué le puedo ayudar
+   64.26 buildup      male_1     3.86 ¿En qué le puedo ayudar?
+   70.02 buildup      male_1     3.86 ¿En qué le puedo ayudar?
+   75.78 buildup      male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
+   83.75 buildup      male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
+   92.41 preview      female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
+  101.63 buildup      female_1   2.43 mi bicicleta
+  105.01 buildup      female_1   2.43 mi bicicleta
+  108.39 buildup      female_1   3.50 arreglar mi bicicleta
+  113.56 buildup      female_1   3.50 arreglar mi bicicleta
+  118.72 buildup      female_1   4.69 Necesito arreglar mi bicicleta.
+  125.87 buildup      female_1   4.69 Necesito arreglar mi bicicleta.
+  133.02 buildup      female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
+  142.24 buildup      female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
+  152.15 buildup      male_1     2.39 ¿Qué le pasa?
+  155.48 buildup      male_1     2.39 ¿Qué le pasa?
+  159.50 preview      female_1   3.79 Tiene una llanta ponchada.
+  165.14 buildup      female_1   2.79 llanta ponchada
+  169.12 buildup      female_1   2.79 llanta ponchada
+  173.09 buildup      female_1   3.26 una llanta ponchada
+  177.86 buildup      female_1   3.26 una llanta ponchada
+  182.63 buildup      female_1   3.79 Tiene una llanta ponchada.
+  188.27 buildup      female_1   3.79 Tiene una llanta ponchada.
+  194.61 preview      male_1     4.75 Muy bien. ¿Para cuándo la necesita?
+  201.86 buildup      male_1     2.31 la necesita
+  205.05 buildup      male_1     2.31 la necesita
+  208.23 buildup      male_1     3.14 cuándo la necesita
+  212.80 buildup      male_1     3.14 cuándo la necesita
+  217.37 buildup      male_1     3.98 ¿Para cuándo la necesita?
+  223.33 buildup      male_1     3.98 ¿Para cuándo la necesita?
+  229.29 buildup      male_1     4.75 Muy bien. ¿Para cuándo la necesita?
+  236.54 buildup      male_1     4.75 Muy bien. ¿Para cuándo la necesita?
+  244.49 preview      female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
+  252.46 buildup      female_1   2.79 ¿Cuánto cuesta?
+  256.43 buildup      female_1   2.79 ¿Cuánto cuesta?
+  260.41 buildup      female_1   4.09 por favor. ¿Cuánto cuesta?
+  266.56 buildup      female_1   4.09 por favor. ¿Cuánto cuesta?
+  272.72 buildup      female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
+  280.69 buildup      female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
+  289.35 buildup      male_1     2.61 Son cien pesos.
+  293.03 buildup      male_1     2.61 Son cien pesos.
+  297.41 buildup      female_1   3.68 Perfecto. Muchas gracias.
+  302.87 buildup      female_1   3.68 Perfecto. Muchas gracias.
+  309.84 narration    narrator   1.50 Now the whole conversation again. Say each line after you hear it.
+  316.05 shadow       male_1     5.18 Buenas tardes. ¿En qué le puedo ayudar?
+  324.02 shadow       female_1   5.93 Buenas tardes. Necesito arreglar mi bicicleta.
+  333.23 shadow       male_1     2.39 ¿Qué le pasa?
+  336.56 shadow       female_1   3.79 Tiene una llanta ponchada.
+  342.20 shadow       male_1     4.75 Muy bien. ¿Para cuándo la necesita?
+  349.45 shadow       female_1   5.18 Para mañana, por favor. ¿Cuánto cuesta?
+  357.41 shadow       male_1     2.61 Son cien pesos.
+  361.09 shadow       female_1   3.68 Perfecto. Muchas gracias.
+  368.06 narration    narrator   1.50 Now swap in a new noun. Say the new sentence, with the right article, before you hear it.
+  375.91 buildup      male_1     4.00 Necesito arreglar la llanta.
+  381.91 buildup      male_1     4.00 Necesito arreglar la llanta.
+  387.91 drill_cue    male_1     4.32 bicicleta
+  392.88 drill_answer male_1     1.50 Necesito arreglar la bicicleta.
+  396.59 drill_cue    male_1     3.89 carro
+  400.88 drill_answer male_1     1.50 Necesito arreglar el carro.
+  404.31 drill_cue    male_1     4.54 computadora
+  409.63 drill_answer male_1     1.50 Necesito arreglar la computadora.
+  413.49 drill_cue    male_1     4.21 teléfono
+  418.28 drill_answer male_1     1.50 Necesito arreglar el teléfono.
+  421.92 drill_cue    male_1     4.00 puerta
+  426.35 drill_answer male_1     1.50 Necesito arreglar la puerta.
+  429.85 drill_cue    male_1     3.89 reloj
+  434.14 drill_answer male_1     1.50 Necesito arreglar el reloj.
+  437.57 drill_cue    male_1     4.21 problema
+  442.36 drill_answer male_1     1.50 Necesito arreglar el problema.
+  446.00 drill_cue    male_1     4.11 lámpara
+  450.61 drill_answer male_1     1.50 Necesito arreglar la lámpara.
+  454.18 drill_cue    male_1     4.11 sistema
+  458.78 drill_answer male_1     1.50 Necesito arreglar el sistema.
+  462.35 drill_cue    male_1     3.89 silla
+  466.65 drill_answer male_1     1.50 Necesito arreglar la silla.
+  472.28 narration    narrator   1.50 Now swap in a new word. Each word changes the sentence you just said. Say the new sentence before you hear it.
+  481.63 buildup      female_1   3.14 Tengo una bicicleta.
+  486.20 buildup      female_1   3.14 Tengo una bicicleta.
+  490.78 drill_cue    female_1   3.25 querer
+  494.46 drill_answer female_1   1.50 Quiero una bicicleta.
+  497.46 drill_cue    female_1   2.61 gato
+  500.46 drill_answer female_1   1.50 Quiero un gato.
+  503.03 drill_cue    female_1   3.25 algunos
+  506.78 drill_answer female_1   1.50 Quiero algunos gatos.
+  509.78 drill_cue    female_1   3.46 nosotros
+  513.82 drill_answer female_1   1.50 Queremos algunos gatos.
+  516.96 drill_cue    female_1   3.46 buscar
+  520.86 drill_answer female_1   1.50 Buscamos algunos gatos.
+  524.00 drill_cue    female_1   3.57 perro
+  527.97 drill_answer female_1   1.50 Buscamos algunos perros.
+  531.18 drill_cue    female_1   3.14 dos
+  534.73 drill_answer female_1   1.50 Buscamos dos perros.
+  537.66 drill_cue    female_1   2.82 ella
+  540.88 drill_answer female_1   1.50 Busca dos perros.
+  543.59 drill_cue    female_1   3.79 pequeño
+  547.88 drill_answer female_1   1.50 Busca dos perros pequeños.
+  551.23 drill_cue    female_1   3.79 tener
+  555.42 drill_answer female_1   1.50 Tiene dos perros pequeños.
+  559.48 buildup      male_1     3.68 ¿Cuánto cuesta la llanta?
+  564.94 buildup      male_1     3.68 ¿Cuánto cuesta la llanta?
+  570.41 drill_cue    male_1     4.00 bicicleta
+  575.05 drill_answer male_1     1.50 ¿Cuánto cuesta la bicicleta?
+  578.55 drill_cue    male_1     4.32 las
+  583.27 drill_answer male_1     1.50 ¿Cuánto cuestan las bicicletas?
+  586.98 drill_cue    male_1     3.89 casco
+  591.28 drill_answer male_1     1.50 ¿Cuánto cuestan los cascos?
+  594.71 drill_cue    male_1     3.79 este
+  598.89 drill_answer male_1     1.50 ¿Cuánto cuesta este casco?
+  602.25 drill_cue    male_1     4.43 nuevo
+  607.08 drill_answer male_1     1.50 ¿Cuánto cuesta este casco nuevo?
+  610.86 drill_cue    male_1     4.64 mochila
+  616.01 drill_answer male_1     1.50 ¿Cuánto cuesta esta mochila nueva?
+  619.93 drill_cue    male_1     5.07 estas
+  625.41 drill_answer male_1     1.50 ¿Cuánto cuestan estas mochilas nuevas?
+  629.62 drill_cue    male_1     5.93 arreglar
+  636.12 drill_answer male_1     1.50 ¿Cuánto cuesta arreglar estas mochilas nuevas?
+  640.91 drill_cue    male_1     5.82 llanta
+  647.16 drill_answer male_1     1.50 ¿Cuánto cuesta arreglar estas llantas nuevas?
+  651.87 drill_cue    male_1     5.39 una
+  657.66 drill_answer male_1     1.50 ¿Cuánto cuesta arreglar una llanta nueva?
+  664.29 narration    narrator   1.50 Now say these in Spanish.
+  667.58 drill_cue    narrator   4.32 I need to fix my bike.
+  673.47 drill_answer male_1     1.50 Necesito arreglar mi bicicleta.
+  677.18 drill_cue    narrator   4.00 I need to buy a tire.
+  682.68 drill_answer female_1   1.50 Necesito comprar una llanta.
+  686.18 drill_cue    narrator   4.21 We need to fix the car.
+  692.04 drill_answer male_1     1.50 Necesitamos arreglar el carro.
+  695.68 drill_cue    narrator   4.32 Do you need to fix your phone?
+  702.15 drill_answer female_1   1.50 ¿Necesita arreglar su teléfono?
+  705.86 drill_cue    narrator   4.64 I don't need to buy a bike.
+  712.43 drill_answer male_1     1.50 No necesito comprar una bicicleta.
+  717.06 drill_cue    narrator   3.68 How much does the tire cost?
+  722.74 drill_answer female_1   1.50 ¿Cuánto cuesta la llanta?
+  726.03 drill_cue    narrator   4.00 How much do the tires cost?
+  731.96 drill_answer male_1     1.50 ¿Cuánto cuestan las llantas?
+  735.46 drill_cue    narrator   4.96 How much does it cost to fix the bike?
+  743.13 drill_answer female_1   1.50 ¿Cuánto cuesta arreglar la bicicleta?
+  747.28 drill_cue    narrator   3.57 How much does the helmet cost?
+  752.99 drill_answer male_1     1.50 ¿Cuánto cuesta el casco?
+  756.21 drill_cue    narrator   3.89 How much do the helmets cost?
+  762.17 drill_answer female_1   1.50 ¿Cuánto cuestan los cascos?
+  766.30 drill_cue    narrator   3.46 By tomorrow, please.
+  771.19 drill_answer male_1     1.50 Para mañana, por favor.
+  774.34 drill_cue    narrator   4.64 I need the bike by tomorrow.
+  780.98 drill_answer female_1   1.50 Necesito la bicicleta para mañana.
+  784.91 drill_cue    narrator   4.64 I need the car by Friday.
+  791.34 drill_answer male_1     1.50 Necesito el carro para el viernes.
+  795.27 drill_cue    narrator   4.32 When do you need the car by?
+  801.59 drill_answer female_1   1.50 ¿Para cuándo necesita el carro?
+  805.30 drill_cue    narrator   5.29 We don't need the bike by tomorrow.
+  813.09 drill_answer male_1     1.50 No necesitamos la bicicleta para mañana.
+  819.64 narration    narrator   1.50 A few phrases from earlier lessons.
+  823.64 review       narrator   2.29 Good morning.
+  826.86 drill_answer male_1     1.50 Buenos días.
+  829.22 review       narrator   3.57 Where is the station?
+  834.29 drill_answer female_1   1.50 ¿Dónde está la estación?
+  837.50 review       narrator   2.61 Thank you very much.
+  841.54 drill_answer male_1     1.50 Muchas gracias.
+  845.61 narration    narrator   1.50 One last listen. Notice how much more you catch now.
+  850.82 dialog       male_1     0.70 Buenas tardes. ¿En qué le puedo ayudar?
+  854.31 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
+  858.29 dialog       male_1     0.70 ¿Qué le pasa?
+  859.92 dialog       female_1   0.70 Tiene una llanta ponchada.
+  862.48 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
+  865.68 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
+  869.16 dialog       male_1     0.70 Son cien pesos.
+  870.94 dialog       female_1   0.70 Perfecto. Muchas gracias.

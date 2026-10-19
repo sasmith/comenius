@@ -41,3 +41,24 @@ def test_known_words_warning(script):
     issues = validate_script(script, spec(known_words=["buenas", "tardes"]))
     warned = [i for i in issues if i.code == "possibly_unknown_tokens"]
     assert warned and "pesos" in warned[0].message
+
+
+def test_gender_cue_must_be_bare_noun(script):
+    drill = next(
+        d for d in script.drills if isinstance(d, SubstitutionDrill) and d.mode == "gender"
+    )
+    drill.items[1].cue = "el carro"
+    assert "gender_cue_has_article" in errors(validate_script(script))
+
+
+def test_progressive_step_must_change_previous_answer(script):
+    drill = next(
+        d for d in script.drills if isinstance(d, SubstitutionDrill) and d.mode == "progressive"
+    )
+    drill.items[2].answer = drill.items[1].answer
+    assert "substitution_unchanged" in errors(validate_script(script))
+
+
+def test_drill_counts(script):
+    issues = validate_script(script, spec(gender_drills=2, substitution_items=(11, 12)))
+    assert {"too_few_gender_drills", "substitution_item_count"} <= set(errors(issues))

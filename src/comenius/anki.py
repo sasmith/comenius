@@ -12,7 +12,7 @@ from pathlib import Path
 import genanki
 
 from .audio import clip_to_mp3
-from .schema import LessonScript, VoiceRole
+from .schema import LANG_NAMES, LessonScript, VoiceRole
 from .tts import ClipCache
 
 CSS = """
@@ -65,8 +65,6 @@ SENTENCE_MODEL = genanki.Model(
     ],
     css=CSS,
 )
-
-LANG_NAMES = {"es": "Spanish", "fr": "French", "de": "German", "it": "Italian", "pt": "Portuguese"}
 
 
 def _stable_id(*parts: str) -> int:

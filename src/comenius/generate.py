@@ -37,13 +37,29 @@ Spoken register; the kind of exchange a person really has. Prefer short lines.
 dictionary lemma, and `form` when the dialog uses an inflected form \
 (lemma "costar", form "cuesta").
 - A brief grammar note in English (3-5 sentences) on the lesson's grammar points.
-- Substitution drills: a model sentence taken from or close to the dialog, then \
-3-4 cues (a word or short phrase in the target language). Each answer is the full \
-model sentence with the cue substituted and everything else adjusted to agree \
-(gender, number, articles, verb forms).
-- Translation items: English prompts the learner must say in the target language, \
-drawn from the dialog and short recombinations of today's new words. The first \
-answer is the most natural one; add alternates only if common.
+- Substitution drills. Each has a short model sentence taken from or close to the \
+dialog, and cues in the target language. Every answer is a full sentence with \
+everything adjusted to agree (gender, number, articles, adjectives, verb forms). \
+Use a different model sentence for each drill. Two kinds:
+  - mode "gender" (noun-gender practice): the model has one noun with an article or \
+determiner that shows gender. Each cue is a BARE singular noun with no article \
+("carro", never "el carro"); the answer puts it into the MODEL sentence with the \
+right article and agreement. Mix masculine and feminine about evenly and include a \
+few that are easy to get wrong (el problema, el mapa, el día, la mano, la foto) \
+when they fit the sentence naturally. Cue nouns may be any common, concrete nouns \
+at the learner's level; they don't count toward the new-word budget.
+  - mode "progressive": each cue changes ONE element of the PREVIOUS answer (the \
+first cue changes the model), so the sentence drifts step by step. Vary the part \
+of speech: a verb given as its infinitive (cue "querer" turns "Tengo una \
+bicicleta." into "Quiero una bicicleta."), a noun ("gato" -> "Quiero un gato."), a \
+determiner or quantifier ("algunos" -> "Quiero algunos gatos."), a subject \
+pronoun ("nosotros" -> "Queremos algunos gatos."), an adjective, a possessive, a \
+number. Every answer must be a natural sentence.
+- Translation groups. Each group drills one structure (`pattern`, in English, e.g. \
+"need to + verb") with several English prompts that vary the subject, verb, \
+object, and polarity (affirmative, negative, question) while keeping the \
+structure. Start from dialog lines, then recombine. The first answer is the most \
+natural one; add alternates only if common.
 
 Rules:
 - title, setting, translations, glosses, grammar_note and prompt_en are English \
@@ -60,7 +76,9 @@ You are a native-speaker editor and language teacher reviewing a short lesson \
 for learners. Check the target-language text for: naturalness in the stated \
 dialect (would a native speaker actually say this?), grammatical correctness, \
 agreement errors in drill answers, translation accuracy, register consistency \
-(tú vs usted), and level-appropriateness. Report only real problems. \
+(tú vs usted), and level-appropriateness. In "progressive" substitution drills \
+each cue changes the PREVIOUS answer (the first changes the model); check every \
+step. In "gender" drills check every article. Report only real problems. \
 Use severity "error" for anything wrong or clearly unnatural that should be \
 fixed before a learner memorizes it; "minor" for stylistic nitpicks.
 """
@@ -152,9 +170,12 @@ def spec_prompt(spec: LessonSpec) -> str:
         f"Dialog: {spec.dialog_lines[0]}-{spec.dialog_lines[1]} lines, "
         f"at most {spec.max_words_per_line} words per line."
     )
+    s_lo, s_hi = spec.substitution_items
+    t_lo, t_hi = spec.translation_items_per_pattern
     parts.append(
-        f"Drills: {spec.substitution_drills} substitution drills and "
-        f"at least {spec.translation_items} translation items."
+        f"Drills: {spec.gender_drills} gender drill(s) and {spec.progressive_drills} "
+        f"progressive drill(s), each with {s_lo}-{s_hi} cues; then "
+        f"{spec.translation_patterns} translation groups of {t_lo}-{t_hi} prompts each."
     )
     parts.append(f"Call {LESSON_TOOL} with the lesson.")
     return "\n\n".join(parts)

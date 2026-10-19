@@ -51,19 +51,27 @@ TEMPLATE = r"""
 #block(fill: luma(246), inset: 10pt, radius: 3pt, width: 100%, d.grammar_note)
 ]
 
+#let drill-label = (mode) => if mode == "gender" [Noun genders: give the article] else if mode == "progressive" [Swap a word: each cue changes the previous sentence] else [Swap a word]
+
 #if d.substitution.len() > 0 [
 == Substitution drills
 #for (i, s) in d.substitution.enumerate() {
   block(breakable: false)[
-    *#(i + 1).* #text(lang: d.lang, s.model) #text(fill: luma(90))[— #s.model_translation]
-    #list(..s.items.map(it => text(lang: d.lang, it.cue)))
+    *#(i + 1).* #text(lang: d.lang, s.model) #text(fill: luma(90))[— #s.model_translation] \
+    #text(size: 8.5pt, fill: luma(110), drill-label(s.mode))
+    #enum(..s.items.map(it => text(lang: d.lang, it.cue)))
   ]
 }
 ]
 
 #if d.translation.len() > 0 [
 == Translate
-#enum(..d.translation.map(it => it.prompt_en))
+#for g in d.translation {
+  block(breakable: false)[
+    #if g.pattern != "" [*#g.pattern*]
+    #enum(..g.items.map(it => it.prompt_en))
+  ]
+}
 ]
 
 #if d.review.len() > 0 [
@@ -75,13 +83,21 @@ TEMPLATE = r"""
 = Answers
 #if d.substitution.len() > 0 [
 == Substitution drills
-#for (i, s) in d.substitution.enumerate() [
-  *#(i + 1).* #list(..s.items.map(it => text(lang: d.lang, it.answer)))
-]
+#for (i, s) in d.substitution.enumerate() {
+  block(breakable: false)[
+    *#(i + 1).* #text(lang: d.lang, s.model)
+    #enum(..s.items.map(it => text(lang: d.lang, it.answer)))
+  ]
+}
 ]
 #if d.translation.len() > 0 [
 == Translate
-#enum(..d.translation.map(it => [#text(lang: d.lang, it.answers.join(" / "))]))
+#for g in d.translation {
+  block(breakable: false)[
+    #if g.pattern != "" [*#g.pattern*]
+    #enum(..g.items.map(it => text(lang: d.lang, it.answers.join(" / "))))
+  ]
+}
 ]
 #if d.review.len() > 0 [
 == Review
@@ -93,7 +109,8 @@ TEMPLATE = r"""
 def _data(script: LessonScript) -> str:
     names = {s.id: s.name for s in script.speakers}
     subs = [d for d in script.drills if isinstance(d, SubstitutionDrill)]
-    trans = [i for d in script.drills if isinstance(d, TranslationDrill) for i in d.items]
+    subs.sort(key=lambda d: d.mode != "gender")  # same order as the audio
+    trans = [d for d in script.drills if isinstance(d, TranslationDrill)]
     payload = {
         "id": script.id,
         "lang": script.lang,

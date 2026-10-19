@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 from .config import LessonConfig
 from .schema import (
+    LANG_NAMES,
     Chapter,
     LessonScript,
     Segment,
@@ -332,14 +333,16 @@ def build_timeline(
     b.clock += cfg.section_gap_s / 2
 
     # 2. Dialog at natural speed
-    b.section("Listen", "Dialog. Listen.")
+    b.chapter("Listen")  # no signpost: the English intro leads straight into the dialog
     for i, line in enumerate(script.dialog):
         b.say("dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s)
     b.clock += cfg.section_gap_s
 
     # 3. Build-up, line by line, with recall woven in
-    b.section("Repeat to learn", "Dialog. Repeat to learn.")
-    b.guide("Now let's learn it line by line. Repeat each phrase out loud in the pause.")
+    b.section(
+        "Line by line",
+        "Now let's build it up, line by line. Repeat each phrase after the speaker.",
+    )
     introduced: set[int] = set()
     for i, line in enumerate(script.dialog):
         voice = line_voice(i)
@@ -382,37 +385,50 @@ def build_timeline(
     b.clock += cfg.section_gap_s
 
     # 4. Dialog with pauses (shadowing)
-    b.section("Repeat for mastery", "Dialog. Repeat for mastery.")
-    b.guide("Here's the conversation again. After each line, say it yourself.")
+    b.section("Your turn", "Now the whole conversation again. Say each line after you hear it.")
     for i, line in enumerate(script.dialog):
         pause = b.learner_pause_for(line_voice(i), line.text)
         b.say("shadow", line_voice(i), lang, line.text, pause_after=pause)
     b.maybe_recall(limit=2)
     b.clock += cfg.section_gap_s
 
-    # 5. Substitution drills
+    # 5. Substitution drills: noun genders, then swap-a-word (simple and progressive)
     subs = [d for d in script.drills if isinstance(d, SubstitutionDrill)]
-    if subs:
-        b.section("Substitution drills", "Substitution drills.")
-        for d_i, drill in enumerate(subs):
+    sections = [
+        (
+            "Noun genders",
+            "Now swap in a new noun. Say the new sentence, with the right article, "
+            "before you hear it.",
+            [d for d in subs if d.mode == "gender"],
+        ),
+        (
+            "Swap a word",
+            "Now swap in a new word. Each word changes the sentence you just said. "
+            "Say the new sentence before you hear it.",
+            [d for d in subs if d.mode != "gender"],
+        ),
+    ]
+    d_i = 0
+    for chapter, signpost, drills in sections:
+        if not drills:
+            continue
+        b.section(chapter, signpost)
+        for drill in drills:
             voice = voices[d_i % len(voices)]
-            b.guide("Practice this sentence." if d_i else "Let's practice with this sentence.")
+            d_i += 1
+            b.guide("Practice this sentence.")
             b.repeat_after_me(voice, drill.model)
-            b.guide(
-                "Now I'll give you a word. Put it into the sentence."
-                if d_i == 0
-                else "Put each word into the sentence."
-            )
             for item in drill.items:
                 b.prompt_then_answer("drill_cue", voice, lang, item.cue, voice, item.answer)
                 b.maybe_recall(limit=1)
+            b.clock += cfg.line_gap_s
         b.clock += cfg.section_gap_s
 
-    # 6. Translation drills
+    # 6. Translation drills: groups of prompts sharing one structure
     trans = [d for d in script.drills if isinstance(d, TranslationDrill)]
     if trans:
-        b.section("Translation drills", "Translation drills.")
-        b.guide("Now, how would you say these?")
+        lang_name = LANG_NAMES.get(lang, lang)
+        b.section(f"Say it in {lang_name}", f"Now say these in {lang_name}.")
         n = 0
         for drill in trans:
             for item in drill.items:
@@ -422,13 +438,13 @@ def build_timeline(
                     "drill_cue", NARRATOR, NARRATOR_LANG, item.prompt_en, voice, item.answers[0]
                 )
                 b.maybe_recall(limit=1)
+            b.clock += cfg.line_gap_s
         b.clock += cfg.section_gap_s
 
     # 7. Review: earlier lessons, then a final pass over today's lines
     if script.review or b.pending:
-        b.section("Review", "Review.")
+        b.section("Review", "A few phrases from earlier lessons.")
         if script.review:
-            b.guide("Some phrases from earlier lessons.")
             for r_i, item in enumerate(script.review):
                 b.prompt_then_answer(
                     "review",
@@ -444,8 +460,7 @@ def build_timeline(
         b.clock += cfg.section_gap_s
 
     # 8. Final listening
-    b.section("Listen again", "Dialog. Listen again.")
-    b.guide("Listen to the whole conversation one more time.")
+    b.section("Listen again", "One last listen. Notice how much more you catch now.")
     for i, line in enumerate(script.dialog):
         b.say("dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s)
     b.guide(f"That's the end of this lesson: {script.title}.", pause_after=0.0)

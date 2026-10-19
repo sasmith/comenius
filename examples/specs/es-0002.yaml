@@ -21,5 +21,8 @@ review:
   - {prompt_en: "How much does it cost?", answer: "¿Cuánto cuesta?", source_lesson: es-0001}
 dialog_lines: [6, 9]
 max_words_per_line: 12
-substitution_drills: 2
-translation_items: 6
+gender_drills: 1              # bare-noun cues; learner supplies the article
+progressive_drills: 2         # each cue changes the previous answer
+substitution_items: [8, 12]   # cues per drill
+translation_patterns: 3       # groups of prompts sharing one structure
+translation_items_per_pattern: [4, 6]
