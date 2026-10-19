@@ -25,15 +25,9 @@ def test_render_all_outputs(script, tmp_path):
     assert all(2 < r < 15 for r in rates.values())
     # The final listen is sped toward 7 syllables/s (espeak is ~4.3, so it hits the 1.2 cap).
     meta = json.loads(result.files["meta.json"].read_text())
-    assert set(meta["final_listen_tempo"]) == set(rates)
-    assert all(
-        t == min(1.2, round(7.0 / rates[v], 2)) for v, t in meta["final_listen_tempo"].items()
-    )
-    first = {s.text: s.duration_s for s in result.timeline.segments if s.chapter == "Listen"}
-    last = [
-        s for s in result.timeline.segments if s.chapter == "Listen again" and s.kind == "dialog"
-    ]
-    assert all(s.duration_s < first[s.text] / 1.1 for s in last)
+    final = meta["final_listen_syllables_per_s"]
+    assert meta["tempo_method"] == "stretch"
+    assert all(abs(final[v] / rates[v] - 1.2) < 0.03 for v in rates)
 
     mp3 = result.files["lesson.mp3"]
     probe = subprocess.run(
@@ -77,3 +71,21 @@ def test_spanish_syllables():
         "ahora leer": 5,  # a-ho-ra le-er
     }
     assert {text: spanish_syllables(text) for text in cases} == cases
+
+
+def test_provider_tempo_method_resynthesizes_faster(script, tmp_path):
+    from comenius.config import LessonConfig
+
+    cfg = Config(
+        out_dir=tmp_path / "out",
+        tts=TTSConfig(cache_dir=tmp_path / "cache"),
+        lesson=LessonConfig(tempo_method="provider"),
+    )
+    result = render_lesson(script, cfg, provider="espeak", mp3=False, pdf=False, anki=False)
+    last = [
+        s for s in result.timeline.segments if s.chapter == "Listen again" and s.kind == "dialog"
+    ]
+    assert {(s.rate, s.tempo) for s in last} == {(1.2, 1.0)}
+    meta = json.loads(result.files["meta.json"].read_text())
+    base, final = meta["syllables_per_s"], meta["final_listen_syllables_per_s"]
+    assert all(final[v] > 1.1 * base[v] for v in base)

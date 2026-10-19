@@ -37,17 +37,17 @@ def spanish_syllables(text: str) -> int:
 
 
 def dialog_rates(segments: Iterable[Segment], lang: str) -> dict[str, float]:
-    """Syllables per second of speech for each voice's full-speed dialog lines.
+    """Syllables per second for each voice over the dialog lines in `segments`.
 
     Clips are trimmed of leading and trailing silence, so this is articulation rate:
-    pauses between lines are excluded.
+    pauses between lines are excluded. Callers pick which lines (e.g. by chapter).
     """
     if lang.split("-")[0] != "es":
         return {}
     syllables: dict[str, int] = {}
     seconds: dict[str, float] = {}
     for seg in segments:
-        if seg.kind == "dialog" and seg.rate == 1.0 and seg.tempo == 1.0:
+        if seg.kind == "dialog":
             syllables[seg.voice] = syllables.get(seg.voice, 0) + spanish_syllables(seg.text)
             seconds[seg.voice] = seconds.get(seg.voice, 0.0) + seg.duration_s
     return {v: round(syllables[v] / seconds[v], 2) for v in syllables}

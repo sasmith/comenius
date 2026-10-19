@@ -483,7 +483,8 @@ def build_timeline(
 
     # 8. Final listening
     # Faster than the voices' own speed, toward native rate: each voice is sped up by
-    # target / its measured syllable rate (Spanish only; capped at max_tempo).
+    # target / its measured syllable rate (Spanish only; capped at max_tempo), either by
+    # stretching the normal clip or by asking the provider for a faster rate.
     tempo: dict[str, float] = {}
     if cfg.final_listen_syllables_per_s:
         for voice, rate in dialog_rates(b.segments, lang).items():
@@ -492,10 +493,11 @@ def build_timeline(
     b.section("Listen again", "One last listen. Notice how much more you catch now.")
     for i, line in enumerate(script.dialog):
         voice = line_voice(i)
-        b.say(
-            "dialog", voice, lang, line.text, tempo=tempo.get(voice, 1.0),
-            pause_after=cfg.line_gap_s,
-        )  # fmt: skip
+        speed = tempo.get(voice, 1.0)
+        if cfg.tempo_method == "provider":
+            b.say("dialog", voice, lang, line.text, rate=speed, pause_after=cfg.line_gap_s)
+        else:
+            b.say("dialog", voice, lang, line.text, tempo=speed, pause_after=cfg.line_gap_s)
     b.guide(f"That's the end of this lesson: {script.title}.", pause_after=0.0)
 
     return Timeline(

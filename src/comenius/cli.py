@@ -183,10 +183,10 @@ def feed(
 
 
 def _echo_rates(result: RenderResult) -> None:
-    for role, (voice, rate, tempo) in sorted(result.speech_rates.items()):
+    for role, (voice, rate, final) in sorted(result.speech_rates.items()):
         typer.echo(
             f"  {role} ({voice}): {rate:.1f} syllables/s (native Spanish ~7.8); "
-            f"final listen ×{tempo:.2f} = {rate * tempo:.1f}"
+            f"final listen {final:.1f} (×{final / rate:.2f})"
         )
 
 

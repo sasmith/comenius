@@ -119,6 +119,12 @@ class LessonConfig(BaseModel):
         "is ~7.8). 0 plays it at the voices' own speed.",
     )
     max_tempo: float = Field(1.2, description="Cap on the final-listen speed-up.")
+    tempo_method: Literal["stretch", "provider"] = Field(
+        "stretch",
+        description="How the final listen is sped up: 'stretch' speeds the normal clip up "
+        "afterward (uniform, free, every provider); 'provider' asks the TTS service to speak "
+        "faster (new synthesis, may sound more like natural fast speech).",
+    )
     gap_s: float = 0.5
     step_gap_s: float = Field(1.5, description="Silence after a drill answer, before the next cue.")
     line_gap_s: float = 0.7

@@ -11,6 +11,8 @@ buildup_rate = 0.9            # speaking rate for build-up fragments
 max_buildup_steps = 4
 final_listen_syllables_per_s = 7.0   # speed "Listen again" toward native (~7.8); 0 = voice speed
 max_tempo = 1.2               # cap on that speed-up (1.6 sounded rushed)
+tempo_method = "stretch"      # "stretch": speed the clip up afterward (free, uniform);
+                              # "provider": ask the voice service to talk faster (new audio)
 in_lesson_recall = false      # English-cued recall woven into the lesson (Pimsleur-style)
 recall_intervals_s = [5, 25, 120, 600]
 # English narration (all off by default; recall/translation cues are always English)
