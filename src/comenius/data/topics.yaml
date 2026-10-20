@@ -1,0 +1,65 @@
+# Default lesson topics: everyday situations in rough order of difficulty.
+#
+# `plan` uses these when you don't pass --topic and the queue has no unfinished
+# situation: it picks the first one you haven't had whose level is at or below the
+# level of the next syllabus point.
+#
+# Language-neutral on purpose. Each entry describes what happens, not where; the
+# generator sets the scene in the target language's culture and dialect.
+#
+# Themes follow the Council of Europe's Waystage/Threshold specifications (the basis
+# of the CEFR levels). Levels are CEFR. Ids are stable; the wording can be edited.
+
+topics:
+  # A1: personal identification, daily life, food and drink, shopping, places
+  - {id: meet-neighbor, level: A1, theme: personal identification, situation: Meeting a new neighbor and introducing yourselves}
+  - {id: cafe-order, level: A1, theme: food and drink, situation: Ordering coffee and something to eat at a café}
+  - {id: where-from, level: A1, theme: personal identification, situation: Chatting with another parent about where you're from and what you do}
+  - {id: ask-directions, level: A1, theme: places, situation: Asking a stranger how to get to the train station}
+  - {id: market-fruit, level: A1, theme: shopping, situation: Buying fruit and vegetables at a market stall}
+  - {id: family-photos, level: A1, theme: relations with other people, situation: Showing a friend photos of your family}
+  - {id: hotel-check-in, level: A1, theme: travel, situation: Checking in at a small hotel}
+  - {id: what-time, level: A1, theme: daily life, situation: Making plans to meet a friend and agreeing on a time}
+  - {id: bakery, level: A1, theme: shopping, situation: Buying bread and pastries at a bakery}
+  - {id: taxi-ride, level: A1, theme: travel, situation: Taking a taxi and telling the driver where to go}
+  - {id: daily-routine, level: A1, theme: daily life, situation: Comparing morning routines with a coworker}
+  - {id: restaurant-dinner, level: A1, theme: food and drink, situation: Ordering dinner at a restaurant and asking for the bill}
+  - {id: weather-chat, level: A1, theme: weather, situation: Small talk about the weather while waiting for the bus}
+  - {id: clothing-store, level: A1, theme: shopping, situation: Trying on clothes and asking for another size}
+  - {id: house-tour, level: A1, theme: house and home, situation: Showing a visitor around your home}
+  - {id: hobbies, level: A1, theme: free time and entertainment, situation: Talking about what you like to do on weekends}
+  - {id: bus-ticket, level: A1, theme: travel, situation: Buying a bus ticket and asking when the next one leaves}
+  - {id: phone-number, level: A1, theme: personal identification, situation: Exchanging phone numbers and email addresses with a new acquaintance}
+
+  # A2: services, health, travel, free time, work
+  - {id: pharmacy, level: A2, theme: health and body care, situation: Asking a pharmacist for something for a cold}
+  - {id: bike-repair, level: A2, theme: services, situation: Taking a bike in for repair}
+  - {id: train-trip, level: A2, theme: travel, situation: Buying train tickets for a weekend trip and choosing seats}
+  - {id: rent-apartment, level: A2, theme: house and home, situation: Asking a landlord about an apartment for rent}
+  - {id: doctor-visit, level: A2, theme: health and body care, situation: Describing symptoms to a doctor}
+  - {id: weekend-recap, level: A2, theme: free time and entertainment, situation: Telling a friend what you did last weekend}
+  - {id: movie-plans, level: A2, theme: free time and entertainment, situation: Choosing a movie and buying tickets with a friend}
+  - {id: post-office, level: A2, theme: services, situation: Sending a package at the post office}
+  - {id: lost-item, level: A2, theme: services, situation: Reporting a lost bag at a station's lost and found}
+  - {id: birthday-party, level: A2, theme: relations with other people, situation: Planning a child's birthday party with another parent}
+  - {id: hair-salon, level: A2, theme: services, situation: Getting a haircut and explaining what you want}
+  - {id: grocery-recipe, level: A2, theme: food and drink, situation: Shopping for ingredients for a recipe a friend gave you}
+  - {id: hotel-problem, level: A2, theme: travel, situation: Telling the hotel front desk something in your room doesn't work}
+  - {id: school-pickup, level: A2, theme: education, situation: Talking with a teacher at school pickup about your child's day}
+  - {id: gym-membership, level: A2, theme: health and body care, situation: Asking about a membership and classes at a gym}
+  - {id: car-rental, level: A2, theme: travel, situation: Renting a car and asking about insurance and fuel}
+  - {id: childhood, level: A2, theme: relations with other people, situation: Sharing memories of where you grew up}
+
+  # B1: opinions, plans, problems, work, the wider world
+  - {id: job-interview, level: B1, theme: work, situation: A job interview for a part-time position}
+  - {id: complaint-call, level: B1, theme: services, situation: Calling a company to complain about a wrong bill}
+  - {id: travel-advice, level: B1, theme: travel, situation: Asking a local for advice on what to see and what to avoid}
+  - {id: neighbor-noise, level: B1, theme: house and home, situation: Politely asking a neighbor to keep the noise down}
+  - {id: news-discussion, level: B1, theme: the wider world, situation: Discussing a news story with a coworker}
+  - {id: future-plans, level: B1, theme: work, situation: Talking with a friend about career plans and what you'd change}
+  - {id: book-recommendation, level: B1, theme: free time and entertainment, situation: Recommending a book or series and explaining why you liked it}
+  - {id: car-breakdown, level: B1, theme: travel, situation: Calling for help after your car breaks down on the highway}
+  - {id: parent-teacher, level: B1, theme: education, situation: A parent-teacher conference about how a child is doing}
+  - {id: bank-account, level: B1, theme: services, situation: Opening a bank account and asking about fees}
+  - {id: environment, level: B1, theme: the wider world, situation: Debating with friends what you each do to waste less}
+  - {id: apology, level: B1, theme: relations with other people, situation: Apologizing to a friend for missing their event and making it up to them}

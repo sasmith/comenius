@@ -283,7 +283,10 @@ def state_show(
 @app.command()
 def plan(
     topic: Annotated[
-        str | None, typer.Option(help="What the lesson is about (default: next in the queue).")
+        str | None,
+        typer.Option(
+            help="What the lesson is about (default: next in the queue, else next built-in topic)."
+        ),
     ] = None,
     situation: Annotated[str, typer.Option(help="Optional scene for the dialog.")] = "",
     lang: Annotated[str, typer.Option(help="Language code.")] = "es",

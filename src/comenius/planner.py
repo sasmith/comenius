@@ -12,6 +12,7 @@ from .config import StateConfig
 from .schema import LessonSpec
 from .state import LearnerState
 from .syllabus import load_syllabus
+from .topics import load_topics
 
 
 def next_lesson_id(state: LearnerState, lang: str) -> str:
@@ -36,7 +37,11 @@ def plan_next(
     situation: str = "",
     lesson_id: str | None = None,
 ) -> LessonSpec:
-    """Next lesson spec. Without a topic, the first unfinished situation in the queue is used."""
+    """Next lesson spec.
+
+    The topic is `topic` if given, else the first unfinished situation in the queue,
+    else the next default topic (data/topics.yaml) not yet used, at or below the level.
+    """
     syllabus = load_syllabus(lang)
     known = state.known_grammar(lang)
     grammar = [p.id for p in syllabus.next_points(known, n=cfg.new_grammar_points)]
@@ -46,17 +51,21 @@ def plan_next(
     if topic is None:
         entry = next((e for e in queue if e.kind == "situation"), None)
         if entry is None:
-            raise NothingToPlan(
-                "No topic given and no unfinished situations in the queue "
-                '(comenius queue add "...").'
-            )
-        topic = entry.text
-        if entry.total > 1:
-            earlier = [lsn.title for lsn in state.lessons(lang) if lsn.topic == topic]
-            series = f"Lesson {entry.done + 1} of {entry.total} on this topic."
-            if earlier:
-                series += f" Earlier lessons: {'; '.join(earlier)}. Use a different scene."
-            situation = f"{situation} {series}".strip()
+            used = {lsn.topic for lsn in state.lessons(lang)}
+            default = load_topics().next_topic(used, level)
+            if default is None:
+                raise NothingToPlan(
+                    'Every default topic has been used; pass --topic or `comenius queue add "..."`.'
+                )
+            topic = default.situation
+        else:
+            topic = entry.text
+            if entry.total > 1:
+                earlier = [lsn.title for lsn in state.lessons(lang) if lsn.topic == topic]
+                series = f"Lesson {entry.done + 1} of {entry.total} on this topic."
+                if earlier:
+                    series += f" Earlier lessons: {'; '.join(earlier)}. Use a different scene."
+                situation = f"{situation} {series}".strip()
 
     known_words = {w.lower() for w in state.known_words(lang)}
     wanted = [

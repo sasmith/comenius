@@ -90,8 +90,10 @@ uv run comenius state show                                # progress and what's 
 ```
 
 A planned lesson teaches the next syllabus point, treats words from earlier lessons
-as known, and reviews lines and words that are due. Its topic is the first unfinished
-situation in the queue (or `--topic`), and up to three queued words are worked in.
+as known, and reviews lines and words that are due. Its topic is `--topic` if given, else
+the first unfinished situation in the queue, else the next unused built-in topic
+([`topics.yaml`](src/comenius/data/topics.yaml): 47 everyday situations, A1→B1, not tied
+to one language). Up to three queued words are worked in.
 `comenius queue list` shows progress. Items come back for review
 after 1, 2, 4, 8, then 16 more lessons; each review moves an item to the next interval.
 

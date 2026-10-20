@@ -55,12 +55,13 @@ def test_placement_points_are_never_reviewed(state):
     assert {"es.a1.greetings", "es.a1.numbers"} <= state.known_grammar("es")
 
 
-def test_queue_series_drives_topics_until_done(state, script):
-    from comenius.planner import NothingToPlan
+def test_queue_jumps_ahead_of_default_topics(state, script):
+    from comenius.topics import load_topics
 
     cfg = StateConfig()
-    with pytest.raises(NothingToPlan):
-        plan_next(state, cfg, lang="es")
+    defaults = [t.situation for t in load_topics().topics]
+    assert plan_next(state, cfg, lang="es").topic == defaults[0]  # empty queue: built-in list
+
     state.queue_add("es", "situation", "At the bike shop", lessons=2)
     first = plan_next(state, cfg, lang="es")
     assert first.topic == "At the bike shop" and "Lesson 1 of 2" in first.situation
@@ -71,8 +72,10 @@ def test_queue_series_drives_topics_until_done(state, script):
 
     state.record_lesson(script.model_copy(update={"id": "es-0002", "topic": "At the bike shop"}))
     assert state.queue("es")[0].complete
-    with pytest.raises(NothingToPlan):
-        plan_next(state, cfg, lang="es")
+    assert plan_next(state, cfg, lang="es").topic == defaults[0]  # queue done: defaults resume
+
+    state.record_lesson(script.model_copy(update={"id": "es-0003", "topic": defaults[0]}))
+    assert plan_next(state, cfg, lang="es").topic == defaults[1]  # used defaults are skipped
 
 
 def test_queued_words_become_required_until_known(state, script):
