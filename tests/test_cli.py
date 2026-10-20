@@ -139,3 +139,38 @@ def test_anki_push_imports_every_lesson_deck_then_syncs(script, config, tmp_path
     assert actions == ["version", "importPackage", "sync"]
     deck = FakeAnkiConnect.calls[1]["params"]["path"]
     assert deck == str((tmp_path / "out" / "es-0001" / "lesson.apkg").resolve())
+
+
+def test_next_plans_generates_renders_and_records_in_sequence(
+    script, config, tmp_path, monkeypatch
+):
+    from .test_generate import FAKE_CLAUDE, lesson_data
+
+    fake = tmp_path / "claude"
+    fake.write_text(FAKE_CLAUDE)
+    fake.chmod(0o755)
+    lesson = tmp_path / "lesson.json"
+    lesson.write_text(json.dumps(lesson_data(script)))
+    monkeypatch.setenv("FAKE_CLAUDE_LESSON", str(lesson))
+    monkeypatch.setenv("FAKE_CLAUDE_LOG", str(tmp_path / "calls.jsonl"))
+    monkeypatch.chdir(tmp_path)
+    with config.open("a", encoding="utf-8") as f:
+        f.write(
+            f'[llm]\nbackend = "claude-code"\nclaude_binary = "{fake}"\n'
+            f'cache_dir = "{tmp_path / "llm"}"\n'
+            f'[tts]\nprovider = "espeak"\ncache_dir = "{tmp_path / "tts"}"\n'
+        )
+
+    out = run("next", "--count", "2", "-c", str(config))
+
+    from comenius.state import LearnerState
+    from comenius.topics import load_topics
+
+    assert "Made 2 lesson(s)." in out
+    lessons = LearnerState(tmp_path / "state.db").lessons("es")
+    assert [lsn.id for lsn in lessons] == ["es-0001", "es-0002"]
+    # Each lesson is planned after the one before: next topic, and earlier words known.
+    defaults = [t.situation for t in load_topics().topics]
+    assert [lsn.topic for lsn in lessons] == defaults[:2]
+    assert "llanta" in (tmp_path / "specs" / "es-0002.yaml").read_text()
+    assert (tmp_path / "out" / "es-0002" / "lesson.mp3").exists()

@@ -101,6 +101,16 @@ uv run comenius generate specs/es-0002.yaml --render --record --publish
 uv run comenius state show                                # progress and what's due
 ```
 
+Or do it all in one step: `comenius next` plans, generates, renders, and records lessons
+one after another, each planned from the state the previous one left:
+
+```sh
+uv run comenius next --count 3 --provider pool --publish --anki
+```
+
+It stops at the first lesson that fails its checks (fix it, `comenius state add` it, and
+run again).
+
 A planned lesson teaches the next syllabus point, treats words from earlier lessons
 as known, and reviews lines and words that are due. Its topic is `--topic` if given, else
 the first unfinished situation in the queue, else the next unused built-in topic

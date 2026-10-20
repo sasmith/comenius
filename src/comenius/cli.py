@@ -13,6 +13,7 @@ from .schema import LessonScript, LessonSpec
 from .state import LearnerState
 
 if TYPE_CHECKING:
+    from .generate import GenerationReport
     from .render import RenderResult
 
 app = typer.Typer(no_args_is_help=True, add_completion=False, help=__doc__)
@@ -127,23 +128,9 @@ def generate(
     ] = False,
     config: ConfigOpt = None,
 ) -> None:
-    """Generate a lesson script with Claude (needs ANTHROPIC_API_KEY)."""
-    from .generate import Generator
-
+    """Generate a lesson script with Claude ([llm] backend: API key or Claude Code)."""
     cfg = _cfg(config)
-    lesson_spec = _load_spec(spec)
-    typer.echo(f"Generating {lesson_spec.id} ({lesson_spec.topic}) with {cfg.llm.model} ...")
-    script, report = Generator(cfg.llm).generate(lesson_spec, use_cache=cache, review=review)
-    out.mkdir(parents=True, exist_ok=True)
-    path = out / f"{script.id}.json"
-    path.write_text(script.model_dump_json(indent=2), encoding="utf-8")
-    (out / f"{script.id}.report.json").write_text(
-        json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    status = "accepted" if report.accepted else "NEEDS REVIEW"
-    typer.echo(f"  {status} after {report.attempts} attempt(s): {path}")
-    for line in report.issues + [f"(minor) {m}" for m in report.review_minor]:
-        typer.echo(f"  - {line}")
+    script, report = _generate_and_save(_load_spec(spec), cfg, out, cache=cache, review=review)
     if then_render:
         from .render import render_lesson
 
@@ -162,6 +149,37 @@ def generate(
         if not then_render:
             raise typer.BadParameter("--publish needs --render")
         _publish(cfg)
+
+
+def _generate_and_save(
+    spec: LessonSpec, cfg: Config, out: Path, *, cache: bool = True, review: bool = True
+) -> tuple[LessonScript, GenerationReport]:
+    """Generate a lesson, write <out>/<id>.json and its .report.json, and print the outcome."""
+    from .generate import Generator
+
+    typer.echo(f"Generating {spec.id} ({spec.topic}) with {cfg.llm.model} ...")
+    script, report = Generator(cfg.llm).generate(spec, use_cache=cache, review=review)
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / f"{script.id}.json"
+    path.write_text(script.model_dump_json(indent=2), encoding="utf-8")
+    (out / f"{script.id}.report.json").write_text(
+        json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    status = "accepted" if report.accepted else "NEEDS REVIEW"
+    typer.echo(f"  {status} after {report.attempts} attempt(s): {path}")
+    for line in report.issues + [f"(minor) {m}" for m in report.review_minor]:
+        typer.echo(f"  - {line}")
+    return script, report
+
+
+def _write_spec(spec: LessonSpec, path: Path) -> None:
+    import yaml
+
+    text = yaml.safe_dump(
+        spec.model_dump(mode="json", exclude_defaults=False), allow_unicode=True, sort_keys=False
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
 
 
 @app.command()
@@ -294,8 +312,6 @@ def plan(
     config: ConfigOpt = None,
 ) -> None:
     """Plan the next lesson spec from learner state, the syllabus, and the queue."""
-    import yaml
-
     from .planner import NothingToPlan, plan_next
 
     cfg = _cfg(config)
@@ -306,12 +322,8 @@ def plan(
     except NothingToPlan as e:
         typer.echo(str(e))
         raise typer.Exit(1) from None
-    text = yaml.safe_dump(
-        spec.model_dump(mode="json", exclude_defaults=False), allow_unicode=True, sort_keys=False
-    )
     path = out or Path("specs") / f"{spec.id}.yaml"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8")
+    _write_spec(spec, path)
     typer.echo(f"Topic: {spec.topic}")
     if spec.required_words:
         typer.echo(f"Queued words: {', '.join(spec.required_words)}")
@@ -320,6 +332,64 @@ def plan(
         f"{len(spec.known_words)} known words, {len(spec.review)} review items"
     )
     typer.echo(f"Next: uv run comenius generate {path} --render --record")
+
+
+@app.command("next")
+def next_lessons(
+    count: Annotated[int, typer.Option(help="How many lessons to make.")] = 1,
+    provider: Annotated[str | None, typer.Option(help="TTS provider (e.g. pool).")] = None,
+    then_publish: Annotated[
+        bool, typer.Option("--publish", help="Upload the podcast site at the end.")
+    ] = False,
+    anki: Annotated[
+        bool, typer.Option("--anki", help="Push decks to Anki (AnkiConnect) at the end.")
+    ] = False,
+    lang: Annotated[str, typer.Option(help="Language code.")] = "es",
+    config: ConfigOpt = None,
+) -> None:
+    """Plan, generate, render, and record the next lessons, each planned after the last.
+
+    Stops at the first lesson that fails its checks: it isn't recorded, so planning
+    again would only repeat it. Fix it and `comenius state add` it, then run again.
+    """
+    from .planner import NothingToPlan, plan_next
+    from .render import render_lesson
+
+    cfg = _cfg(config)
+    state = LearnerState(cfg.state.path)
+    made = 0
+    for n in range(1, count + 1):
+        try:
+            spec = plan_next(state, cfg.state, lang=lang)
+        except NothingToPlan as e:
+            typer.echo(str(e))
+            break
+        typer.echo(f"[{n}/{count}] {spec.id}: {spec.topic}")
+        _write_spec(spec, Path("specs") / f"{spec.id}.yaml")
+        script, report = _generate_and_save(spec, cfg, Path("lessons"))
+        if not report.accepted:
+            typer.echo(f"  stopped: {spec.id} needs review (see lessons/{spec.id}.report.json)")
+            break
+        result = render_lesson(script, cfg, provider=provider)
+        typer.echo(f"  rendered to {result.lesson_dir}")
+        _echo_rates(result)
+        seq = state.record_lesson(script)
+        typer.echo(f"  recorded as lesson #{seq}")
+        made += 1
+    typer.echo(f"Made {made} lesson(s).")
+    if made and then_publish:
+        _publish(cfg)
+    if made and anki:
+        from .ankiconnect import AnkiConnect, AnkiConnectError, push_decks
+
+        try:
+            decks = push_decks(cfg.out_dir, AnkiConnect(cfg.anki.url))
+        except AnkiConnectError as e:
+            typer.echo(str(e))
+            raise typer.Exit(1) from None
+        typer.echo(f"Pushed {len(decks)} deck(s) to Anki and synced.")
+    if made < count:
+        raise typer.Exit(1)
 
 
 queue_app = typer.Typer(no_args_is_help=True, help="Things you want to learn, used by plan.")
