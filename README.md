@@ -70,6 +70,18 @@ Generate a new lesson from a spec with Claude, then render it:
 ANTHROPIC_API_KEY=... uv run comenius generate examples/specs/es-0002.yaml --render
 ```
 
+Or use a Claude subscription instead of an API key. Install
+[Claude Code](https://code.claude.com/docs/en/overview), sign in once by running
+`claude`, and set the backend in `comenius.toml`:
+
+```toml
+[llm]
+backend = "claude-code"
+```
+
+Comenius then runs `claude -p` with tools, plugins, hooks, and project files turned
+off, and generation counts against your plan's usage limits.
+
 Generation runs code checks (new-word budget, required words, English-only
 narrator text, drill sanity) and a native-speaker review pass, regenerating up
 to three times. A `<id>.report.json` next to the script records what happened.

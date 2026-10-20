@@ -169,6 +169,12 @@ class TTSConfig(BaseModel):
 
 
 class LLMConfig(BaseModel):
+    backend: Literal["api", "claude-code"] = Field(
+        "api",
+        description="'api' calls the Anthropic API (ANTHROPIC_API_KEY). 'claude-code' runs the "
+        "`claude` CLI, using however Claude Code is signed in (e.g. a Claude subscription).",
+    )
+    claude_binary: str = "claude"
     model: str = "claude-sonnet-5-5"
     review_model: str | None = None
     max_attempts: int = 3

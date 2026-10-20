@@ -1,9 +1,11 @@
 """Generation loop tested against a fake Anthropic client (no network)."""
 
+import json
 from types import SimpleNamespace
 
 from comenius.config import LLMConfig
 from comenius.generate import LESSON_TOOL, REVIEW_TOOL, Generator, lesson_tool_schema
+from comenius.llm import APIBackend
 from comenius.schema import LessonSpec
 
 
@@ -50,7 +52,7 @@ def test_tool_schema_omits_pipeline_fields():
 
 def test_accepts_clean_lesson_first_try(script, tmp_path):
     client = FakeClient([lesson_data(script)], [[]])
-    gen = Generator(LLMConfig(cache_dir=tmp_path), client=client)
+    gen = Generator(LLMConfig(cache_dir=tmp_path), backend=APIBackend(client))
     out, report = gen.generate(make_spec())
     assert report.accepted and report.attempts == 1
     assert out.id == "es-0009"  # id comes from the spec
@@ -62,7 +64,7 @@ def test_regenerates_on_validation_and_review_errors(script, tmp_path):
     clean = lesson_data(script)
     review_error = [{"location": "dialog[4]", "problem": "unnatural", "severity": "error"}]
     client = FakeClient([too_many, clean, clean], [review_error, []])
-    gen = Generator(LLMConfig(cache_dir=tmp_path), client=client)
+    gen = Generator(LLMConfig(cache_dir=tmp_path), backend=APIBackend(client))
 
     out, report = gen.generate(make_spec())
 
@@ -76,7 +78,7 @@ def test_regenerates_on_validation_and_review_errors(script, tmp_path):
 
 def test_cache_hit_skips_api(script, tmp_path):
     client = FakeClient([lesson_data(script)], [[]])
-    gen = Generator(LLMConfig(cache_dir=tmp_path), client=client)
+    gen = Generator(LLMConfig(cache_dir=tmp_path), backend=APIBackend(client))
     gen.generate(make_spec())
     calls = len(client.messages.calls)
     out, report = gen.generate(make_spec())
@@ -87,7 +89,45 @@ def test_gives_up_with_needs_review(script, tmp_path):
     bad = lesson_data(script)
     bad["new_words"] = bad["new_words"] * 2
     client = FakeClient([bad, bad, bad], [])
-    gen = Generator(LLMConfig(cache_dir=tmp_path, max_attempts=3), client=client)
+    gen = Generator(LLMConfig(cache_dir=tmp_path, max_attempts=3), backend=APIBackend(client))
     out, report = gen.generate(make_spec())
     assert not report.accepted and report.attempts == 3
     assert any("new_word_budget" in i for i in report.issues)
+
+
+FAKE_CLAUDE = r"""#!/usr/bin/env python3
+# Stands in for the `claude` CLI: checks the flags, logs the call, answers from files.
+import json, os, sys
+args = sys.argv[1:]
+assert args[0] == "-p" and "--json-schema" in args and "--safe-mode" in args
+assert args[args.index("--tools") + 1] == "" and "--bare" not in args  # keep the user's login
+schema = json.loads(args[args.index("--json-schema") + 1])
+review = "issues" in schema["properties"]
+with open(os.environ["FAKE_CLAUDE_LOG"], "a") as f:
+    f.write(json.dumps({"prompt": sys.stdin.read(), "review": review}) + "\n")
+if review:
+    out = {"issues": []}
+else:
+    out = json.load(open(os.environ["FAKE_CLAUDE_LESSON"]))
+print(json.dumps({"type": "result", "subtype": "success", "is_error": False,
+                  "result": "", "structured_output": out}))
+"""
+
+
+def test_claude_code_backend_runs_the_cli(script, tmp_path, monkeypatch):
+    fake = tmp_path / "claude"
+    fake.write_text(FAKE_CLAUDE)
+    fake.chmod(0o755)
+    lesson = tmp_path / "lesson.json"
+    lesson.write_text(json.dumps(lesson_data(script)))
+    log = tmp_path / "calls.jsonl"
+    monkeypatch.setenv("FAKE_CLAUDE_LESSON", str(lesson))
+    monkeypatch.setenv("FAKE_CLAUDE_LOG", str(log))
+
+    cfg = LLMConfig(cache_dir=tmp_path / "cache", backend="claude-code", claude_binary=str(fake))
+    out, report = Generator(cfg).generate(make_spec())
+
+    assert report.accepted and out.id == "es-0009"
+    calls = [json.loads(line) for line in log.read_text().splitlines()]
+    assert [c["review"] for c in calls] == [False, True]
+    assert "Topic: bike shop" in calls[0]["prompt"]

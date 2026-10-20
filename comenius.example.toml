@@ -58,6 +58,7 @@ kokoro_dir = "~/.cache/comenius/kokoro"
 # male_1 = "<voice id>"
 
 [llm]
+backend = "api"               # "api" (ANTHROPIC_API_KEY) or "claude-code" (your Claude Code sign-in)
 model = "claude-sonnet-5-5"
 max_attempts = 3
 

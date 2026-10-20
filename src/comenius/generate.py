@@ -1,10 +1,10 @@
 """Generate a LessonScript from a LessonSpec with Claude, then review and regenerate.
 
 Flow per attempt:
-  1. Generate (forced tool call returning LessonScript JSON).
+  1. Generate (a structured call returning LessonScript JSON; see llm.py).
   2. Schema validation + deterministic checks (validate.py).
   3. LLM review as a native-speaker editor for the pinned dialect.
-Any errors are sent back as a tool_result so the model revises in context.
+Any errors are sent back with the previous answer so the model revises in context.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .config import LLMConfig
+from .llm import Backend, Turn, make_backend
 from .schema import LessonScript, LessonSpec
 from .syllabus import load_syllabus
 from .validate import Issue, validate_script
@@ -184,74 +185,37 @@ def spec_prompt(spec: LessonSpec) -> str:
         f"progressive drill(s), each with {s_lo}-{s_hi} cues; then "
         f"{spec.translation_patterns} translation groups of {t_lo}-{t_hi} prompts each."
     )
-    parts.append(f"Call {LESSON_TOOL} with the lesson.")
+    parts.append("Submit the complete lesson in the required format.")
     return "\n\n".join(parts)
-
-
-def _tool_input(response: Any, name: str) -> tuple[str, dict[str, Any]]:
-    for block in response.content:
-        if getattr(block, "type", None) == "tool_use" and block.name == name:
-            return block.id, block.input
-    raise GenerationError(f"Model did not call {name}")
 
 
 def _spec_hash(spec: LessonSpec, cfg: LLMConfig) -> str:
     payload = json.dumps({"spec": spec.model_dump(mode="json"), "model": cfg.model}, sort_keys=True)
+    # The backend isn't part of the key: the same model gives an equally good lesson.
     return hashlib.sha256(payload.encode()).hexdigest()[:20]
 
 
 class Generator:
-    def __init__(self, cfg: LLMConfig, client: Any | None = None) -> None:
+    def __init__(self, cfg: LLMConfig, backend: Backend | None = None) -> None:
         self.cfg = cfg
-        if client is None:
-            import anthropic
-
-            client = anthropic.Anthropic()
-        self.client = client
+        self.backend = backend or make_backend(cfg)
 
     # -- calls -----------------------------------------------------------------
 
-    def _generate_call(self, messages: list[dict[str, Any]]) -> Any:
-        return self.client.messages.create(
-            model=self.cfg.model,
-            max_tokens=self.cfg.max_tokens,
-            system=SYSTEM_PROMPT,
-            tools=[
-                {
-                    "name": LESSON_TOOL,
-                    "description": "Submit the complete lesson.",
-                    "input_schema": lesson_tool_schema(),
-                }
-            ],
-            tool_choice={"type": "tool", "name": LESSON_TOOL},
-            messages=list(messages),
-        )
-
     def review(self, script: LessonScript, spec: LessonSpec) -> list[dict[str, Any]]:
-        response = self.client.messages.create(
-            model=self.cfg.review_model or self.cfg.model,
-            max_tokens=4000,
-            system=REVIEW_SYSTEM,
-            tools=[
-                {
-                    "name": REVIEW_TOOL,
-                    "description": "Submit review findings.",
-                    "input_schema": REVIEW_SCHEMA,
-                }
-            ],
-            tool_choice={"type": "tool", "name": REVIEW_TOOL},
-            messages=[
-                {
-                    "role": "user",
-                    "content": (
-                        f"Dialect: {spec.dialect}. Level: {spec.level}.\n\n"
-                        f"Lesson JSON:\n{script.model_dump_json(indent=1, exclude={'review'})}"
-                    ),
-                }
-            ],
+        prompt = (
+            f"Dialect: {spec.dialect}. Level: {spec.level}.\n\n"
+            f"Lesson JSON:\n{script.model_dump_json(indent=1, exclude={'review'})}"
         )
-        _, data = _tool_input(response, REVIEW_TOOL)
-        return list(data.get("issues", []))
+        data = self.backend.call(
+            model=self.cfg.review_model or self.cfg.model,
+            system=REVIEW_SYSTEM,
+            name=REVIEW_TOOL,
+            schema=REVIEW_SCHEMA,
+            turns=[("user", prompt)],
+            max_tokens=4000,
+        )
+        return list(data["issues"])
 
     # -- main loop ---------------------------------------------------------------
 
@@ -265,15 +229,21 @@ class Generator:
             return LessonScript.model_validate(cached["script"]), report
 
         report = GenerationReport()
-        messages: list[dict[str, Any]] = [{"role": "user", "content": spec_prompt(spec)}]
+        turns: list[Turn] = [("user", spec_prompt(spec))]
         best: LessonScript | None = None
 
         for attempt in range(1, self.cfg.max_attempts + 1):
             report.attempts = attempt
-            response = self._generate_call(messages)
-            tool_id, data = _tool_input(response, LESSON_TOOL)
+            raw = self.backend.call(
+                model=self.cfg.model,
+                system=SYSTEM_PROMPT,
+                name=LESSON_TOOL,
+                schema=lesson_tool_schema(),
+                turns=list(turns),
+                max_tokens=self.cfg.max_tokens,
+            )
             data = {
-                **data,
+                **raw,
                 "id": spec.id,
                 "lang": spec.lang,
                 "dialect": spec.dialect,
@@ -313,21 +283,13 @@ class Generator:
                 report.accepted = True
                 break
 
-            messages += [
-                {"role": "assistant", "content": response.content},
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": tool_id,
-                            "is_error": True,
-                            "content": "Please fix these problems and call "
-                            f"{LESSON_TOOL} again with the full corrected lesson:\n- "
-                            + "\n- ".join(problems),
-                        }
-                    ],
-                },
+            turns += [
+                ("assistant", raw),
+                (
+                    "user",
+                    "Please fix these problems and submit the full corrected lesson again:\n- "
+                    + "\n- ".join(problems),
+                ),
             ]
 
         if best is None:
