@@ -131,13 +131,25 @@ class GenerationReport:
         }
 
 
+def _strip_discriminators(node: Any) -> Any:
+    """Drop pydantic's OpenAPI `discriminator` keyword, which strict JSON Schema validators
+    (Claude Code's --json-schema) reject. The `oneOf` branches already differ by their
+    `type` const, so nothing is lost."""
+    if isinstance(node, dict):
+        return {k: _strip_discriminators(v) for k, v in node.items() if k != "discriminator"}
+    if isinstance(node, list):
+        return [_strip_discriminators(v) for v in node]
+    return node
+
+
 def lesson_tool_schema() -> dict[str, Any]:
-    schema = LessonScript.model_json_schema()
+    schema = _strip_discriminators(LessonScript.model_json_schema())
     # The pipeline fills these in from the spec.
     for key in ("id", "review", "topic"):
         schema["properties"].pop(key, None)
         if key in schema.get("required", []):
             schema["required"].remove(key)
+    schema["$defs"].pop("ReviewItem", None)  # only used by `review`
     return schema
 
 

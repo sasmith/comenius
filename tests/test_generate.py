@@ -4,7 +4,13 @@ import json
 from types import SimpleNamespace
 
 from comenius.config import LLMConfig
-from comenius.generate import LESSON_TOOL, REVIEW_TOOL, Generator, lesson_tool_schema
+from comenius.generate import (
+    LESSON_TOOL,
+    REVIEW_SCHEMA,
+    REVIEW_TOOL,
+    Generator,
+    lesson_tool_schema,
+)
 from comenius.llm import APIBackend
 from comenius.schema import LessonSpec
 
@@ -42,6 +48,34 @@ def lesson_data(script):
 
 def make_spec():
     return LessonSpec(id="es-0009", topic="bike shop", new_word_budget=(6, 10))
+
+
+SCHEMA_KEYWORDS = {
+    "$defs", "$ref", "type", "properties", "required", "items", "enum", "const", "default",
+    "title", "description", "anyOf", "oneOf", "allOf", "minItems", "maxItems", "minimum",
+    "maximum", "additionalProperties", "prefixItems",
+}  # fmt: skip
+
+
+def _unknown_keywords(node, found):
+    for key, value in node.items():
+        if key not in SCHEMA_KEYWORDS:
+            found.add(key)
+        if key in ("properties", "$defs"):
+            for sub in value.values():
+                _unknown_keywords(sub, found)
+        elif key in ("anyOf", "oneOf", "allOf", "prefixItems"):
+            for sub in value:
+                _unknown_keywords(sub, found)
+        elif key in ("items", "additionalProperties") and isinstance(value, dict):
+            _unknown_keywords(value, found)
+    return found
+
+
+def test_schemas_use_only_standard_keywords():
+    # Claude Code's --json-schema validates strictly; pydantic adds OpenAPI extras.
+    assert _unknown_keywords(lesson_tool_schema(), set()) == set()
+    assert _unknown_keywords(REVIEW_SCHEMA, set()) == set()
 
 
 def test_tool_schema_omits_pipeline_fields():
@@ -102,6 +136,7 @@ args = sys.argv[1:]
 assert args[0] == "-p" and "--json-schema" in args and "--safe-mode" in args
 assert args[args.index("--tools") + 1] == "" and "--bare" not in args  # keep the user's login
 schema = json.loads(args[args.index("--json-schema") + 1])
+assert "discriminator" not in json.dumps(schema)  # strict validators reject it
 review = "issues" in schema["properties"]
 with open(os.environ["FAKE_CLAUDE_LOG"], "a") as f:
     f.write(json.dumps({"prompt": sys.stdin.read(), "review": review}) + "\n")
