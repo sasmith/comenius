@@ -166,3 +166,15 @@ def test_claude_code_backend_runs_the_cli(script, tmp_path, monkeypatch):
     calls = [json.loads(line) for line in log.read_text().splitlines()]
     assert [c["review"] for c in calls] == [False, True]
     assert "Topic: bike shop" in calls[0]["prompt"]
+
+
+def test_changing_the_prompt_misses_the_cache(script, tmp_path, monkeypatch):
+    import comenius.generate as generate
+
+    client = FakeClient([lesson_data(script), lesson_data(script)], [[], []])
+    gen = Generator(LLMConfig(cache_dir=tmp_path), backend=APIBackend(client))
+    gen.generate(make_spec())
+    calls = len(client.messages.calls)
+    monkeypatch.setattr(generate, "SYSTEM_PROMPT", generate.SYSTEM_PROMPT + "\nNew rule.")
+    gen.generate(make_spec())
+    assert len(client.messages.calls) > calls

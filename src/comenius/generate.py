@@ -57,6 +57,12 @@ bicicleta." into "Quiero una bicicleta."), a noun ("gato" -> "Quiero un gato."),
 determiner or quantifier ("algunos" -> "Quiero algunos gatos."), a subject \
 pronoun ("nosotros" -> "Queremos algunos gatos."), an adjective, a possessive, a \
 number. Every answer must be a natural sentence.
+  - Subject pronouns, in every substitution drill: follow the model sentence. If the \
+model leaves the subject implicit ("Somos maestros."), no answer states a subject \
+pronoun; a pronoun cue changes only the verb ("ustedes" -> "Son maestros."). If the \
+model states its subject ("El señor es maestro."), every answer states one ("yo" -> \
+"Yo soy maestro."). Never mix the two styles within a drill; use both styles across \
+the lesson's drills.
 - Translation groups. Each group drills one structure (`pattern`, in English, e.g. \
 "need to + verb") with several English prompts that vary the subject, verb, \
 object, and polarity (affirmative, negative, question) while keeping the \
@@ -82,7 +88,10 @@ dialect (would a native speaker actually say this?), grammatical correctness, \
 agreement errors in drill answers, translation accuracy, register consistency \
 (tú vs usted), and level-appropriateness. In "progressive" substitution drills \
 each cue changes the PREVIOUS answer (the first changes the model); check every \
-step. In "gender" drills check every article. Report only real problems. \
+step. In "gender" drills check every article. Within each substitution drill, answers \
+must handle subject pronouns the same way as the model sentence: all implicit if the \
+model's subject is implicit, all stated if it is stated; flag a drill that mixes them as \
+an error. Report only real problems. \
 Use severity "error" for anything wrong or clearly unnatural that should be \
 fixed before a learner memorizes it; "minor" for stylistic nitpicks.
 """
@@ -202,8 +211,16 @@ def spec_prompt(spec: LessonSpec) -> str:
 
 
 def _spec_hash(spec: LessonSpec, cfg: LLMConfig) -> str:
-    payload = json.dumps({"spec": spec.model_dump(mode="json"), "model": cfg.model}, sort_keys=True)
-    # The backend isn't part of the key: the same model gives an equally good lesson.
+    # The prompts are part of the key, so changing the instructions regenerates lessons.
+    # The backend isn't: the same model gives an equally good lesson.
+    payload = json.dumps(
+        {
+            "spec": spec.model_dump(mode="json"),
+            "model": cfg.model,
+            "prompts": [SYSTEM_PROMPT, REVIEW_SYSTEM],
+        },
+        sort_keys=True,
+    )
     return hashlib.sha256(payload.encode()).hexdigest()[:20]
 
 
