@@ -82,7 +82,21 @@ def _sentence_starts(words: list[str]) -> list[int]:
     return starts
 
 
-def buildup_fragments(line: str, max_steps: int = 4) -> list[str]:
+# Words that lean on the word after them and can't end a fragment's left edge: starting
+# a fragment right after one cuts it off ("me llamo Laura" -> "llamo Laura", "no sé" ->
+# "sé"). Object pronouns, articles and contractions, possessives, and "no".
+BOUND_WORDS: dict[str, set[str]] = {
+    "es": {
+        "me", "te", "se", "lo", "la", "le", "nos", "os", "los", "las", "les",
+        "el", "un", "una", "unos", "unas", "al", "del",
+        "mi", "mis", "tu", "tus", "su", "sus",
+        "nuestro", "nuestra", "nuestros", "nuestras", "vuestro", "vuestra", "vuestros", "vuestras",
+        "no",
+    },
+}  # fmt: skip
+
+
+def buildup_fragments(line: str, max_steps: int = 4, lang: str = "es") -> list[str]:
     """Backward build-up of a whole dialog line.
 
     Fragments grow from the end of the line toward its beginning; the last
@@ -92,7 +106,7 @@ def buildup_fragments(line: str, max_steps: int = 4) -> list[str]:
     start or after a comma) and keeps its punctuation.
 
     >>> buildup_fragments("Buenas tardes. ¿En qué le puedo ayudar?")
-    ['puedo ayudar', 'qué le puedo ayudar', '¿En qué le puedo ayudar?', \
+    ['qué le puedo ayudar', '¿En qué le puedo ayudar?', \
 'Buenas tardes. ¿En qué le puedo ayudar?']
     """
     words = line.split()
@@ -103,8 +117,13 @@ def buildup_fragments(line: str, max_steps: int = 4) -> list[str]:
     last = sentence_starts[-1]
     after_comma = [i + 1 for i, w in enumerate(words[:last]) if w.endswith(",")]
     # Allowed start positions: anywhere in the final sentence, or a phrase
-    # boundary in an earlier one.
-    allowed = sorted(set(range(last, n)) | set(sentence_starts) | set(after_comma))
+    # boundary in an earlier one; never right after a word bound to the next one.
+    bound = BOUND_WORDS.get(lang.split("-")[0], set())
+    allowed = sorted(
+        c
+        for c in set(range(last, n)) | set(sentence_starts) | set(after_comma)
+        if c in sentence_starts or normalize_token(words[c - 1]) not in bound
+    )
 
     steps = min(max_steps, n - 1)
     starts: set[int] = set()
@@ -383,7 +402,7 @@ def build_timeline(
                 b.narrate(f"The word for '{word.gloss}' is")
                 b.repeat_after_me(voice, word.form or word.lemma, cfg.buildup_rate)
 
-        frags = buildup_fragments(line.text, cfg.max_buildup_steps)
+        frags = buildup_fragments(line.text, cfg.max_buildup_steps, lang)
         if len(frags) > 1:
             # Hear the whole line once, with a pause to try it, before building it up.
             pause = b.learner_pause_for(voice, line.text)

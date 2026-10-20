@@ -32,9 +32,20 @@ def test_intermediate_fragments_have_no_punctuation():
 
 def test_buildup_spans_the_whole_line():
     frags = buildup_fragments("Buenas tardes. ¿En qué le puedo ayudar?")
-    assert frags[0] == "puedo ayudar"
+    assert frags[0] == "qué le puedo ayudar"  # never "puedo ayudar": "le" stays on its verb
     assert "¿En qué le puedo ayudar?" in frags
     assert frags[-1] == "Buenas tardes. ¿En qué le puedo ayudar?"
+
+
+def test_buildup_never_cuts_a_word_from_the_word_it_leans_on():
+    # A pronoun, article, possessive, or "no" stays with what follows it.
+    assert buildup_fragments("Hola, me llamo Laura.")[0] == "me llamo Laura"
+    assert buildup_fragments("Tiene una llanta ponchada.")[0] == "una llanta ponchada"
+    for line in ["No sé dónde está mi casa nueva.", "Perdón, ¿dónde está la estación?"]:
+        for frag in buildup_fragments(line)[:-1]:
+            words = line.replace(",", "").replace("¿", "").replace("?", "").rstrip(".").split()
+            before = words[len(words) - len(frag.split()) - 1]
+            assert before.lower() not in {"no", "mi", "la"}, (line, frag)
 
 
 def test_buildup_crosses_sentences_at_phrase_boundaries():
