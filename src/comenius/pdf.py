@@ -108,7 +108,7 @@ TEMPLATE = r"""
 
 def _data(script: LessonScript) -> str:
     names = {s.id: s.name for s in script.speakers}
-    subs = [d for d in script.drills if isinstance(d, SubstitutionDrill)]
+    subs = [d.in_lesson_order(script.id) for d in script.drills if isinstance(d, SubstitutionDrill)]
     subs.sort(key=lambda d: d.mode != "gender")  # same order as the audio
     trans = [d for d in script.drills if isinstance(d, TranslationDrill)]
     payload = {

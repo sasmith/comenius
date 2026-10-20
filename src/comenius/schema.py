@@ -8,6 +8,7 @@ Timeline     -> the sequencer's expansion of a script into timed audio segments
 from __future__ import annotations
 
 import json
+import random
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -65,6 +66,20 @@ class SubstitutionDrill(BaseModel):
     model: str = Field(description="The model sentence in the target language.")
     model_translation: str = ""
     items: list[SubstitutionItem] = Field(min_length=1)
+
+    def in_lesson_order(self, lesson_id: str) -> SubstitutionDrill:
+        """This drill with its cues in the order the lesson presents them.
+
+        Gender and simple cues are independent of each other, so they're shuffled
+        (seeded by lesson and model sentence, so every output agrees): the writer
+        tends to alternate masculine and feminine, which gives the answer away.
+        Progressive cues build on each other and keep their order.
+        """
+        if self.mode == "progressive":
+            return self
+        items = list(self.items)
+        random.Random(f"{lesson_id}:{self.model}").shuffle(items)
+        return self.model_copy(update={"items": items})
 
     def bases(self) -> list[str]:
         """The sentence each item's cue is applied to."""

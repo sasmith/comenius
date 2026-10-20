@@ -434,7 +434,7 @@ def build_timeline(
     b.clock += cfg.section_gap_s
 
     # 5. Substitution drills: noun genders, then swap-a-word (simple and progressive)
-    subs = [d for d in script.drills if isinstance(d, SubstitutionDrill)]
+    subs = [d.in_lesson_order(script.id) for d in script.drills if isinstance(d, SubstitutionDrill)]
     sections = [
         (
             "Noun genders",

@@ -64,24 +64,24 @@
   353.35 narration    narrator   1.50 Now swap in a new noun. Say the new sentence, with the right article, before you hear it.
   361.20 buildup      male_1     4.00 Necesito arreglar la llanta.
   367.20 buildup      male_1     4.00 Necesito arreglar la llanta.
-  373.20 drill_cue    male_1     4.32 bicicleta
-  378.17 drill_answer male_1     1.50 Necesito arreglar la bicicleta.
-  381.88 drill_cue    male_1     3.89 carro
-  386.17 drill_answer male_1     1.50 Necesito arreglar el carro.
-  389.60 drill_cue    male_1     4.54 computadora
-  394.92 drill_answer male_1     1.50 Necesito arreglar la computadora.
-  398.78 drill_cue    male_1     4.21 teléfono
-  403.57 drill_answer male_1     1.50 Necesito arreglar el teléfono.
-  407.21 drill_cue    male_1     4.00 puerta
-  411.64 drill_answer male_1     1.50 Necesito arreglar la puerta.
-  415.14 drill_cue    male_1     3.89 reloj
-  419.43 drill_answer male_1     1.50 Necesito arreglar el reloj.
-  422.86 drill_cue    male_1     4.21 problema
-  427.64 drill_answer male_1     1.50 Necesito arreglar el problema.
-  431.29 drill_cue    male_1     4.11 lámpara
-  435.89 drill_answer male_1     1.50 Necesito arreglar la lámpara.
-  439.47 drill_cue    male_1     4.11 sistema
-  444.07 drill_answer male_1     1.50 Necesito arreglar el sistema.
+  373.20 drill_cue    male_1     4.54 computadora
+  378.52 drill_answer male_1     1.50 Necesito arreglar la computadora.
+  382.38 drill_cue    male_1     4.32 bicicleta
+  387.35 drill_answer male_1     1.50 Necesito arreglar la bicicleta.
+  391.06 drill_cue    male_1     4.11 sistema
+  395.67 drill_answer male_1     1.50 Necesito arreglar el sistema.
+  399.24 drill_cue    male_1     3.89 carro
+  403.53 drill_answer male_1     1.50 Necesito arreglar el carro.
+  406.96 drill_cue    male_1     4.21 teléfono
+  411.74 drill_answer male_1     1.50 Necesito arreglar el teléfono.
+  415.39 drill_cue    male_1     4.21 problema
+  420.17 drill_answer male_1     1.50 Necesito arreglar el problema.
+  423.81 drill_cue    male_1     4.11 lámpara
+  428.42 drill_answer male_1     1.50 Necesito arreglar la lámpara.
+  431.99 drill_cue    male_1     4.00 puerta
+  436.42 drill_answer male_1     1.50 Necesito arreglar la puerta.
+  439.92 drill_cue    male_1     3.89 reloj
+  444.21 drill_answer male_1     1.50 Necesito arreglar el reloj.
   447.64 drill_cue    male_1     3.89 silla
   451.94 drill_answer male_1     1.50 Necesito arreglar la silla.
   457.57 narration    narrator   1.50 Now swap in a new word. Each word changes the sentence you just said. Say the new sentence before you hear it.

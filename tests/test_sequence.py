@@ -203,3 +203,29 @@ def test_names_in_english_narration_are_marked_for_native_pronunciation(script):
     runs = language_runs(script.setting, "en", intro.terms, intro.term_lang)
     assert ("Don Luis", "es-MX") in runs and ("Ana", "es-MX") in runs
     assert language_runs("Banana bread.", "en", ["Ana"], "es-MX") == [("Banana bread.", "en")]
+
+
+def test_gender_cues_are_shuffled_but_progressive_cues_keep_order(script):
+    # The fixture's gender cues alternate feminine/masculine as written.
+    gender = next(d for d in script.drills if getattr(d, "mode", "") == "gender")
+    progressive = [d for d in script.drills if getattr(d, "mode", "") == "progressive"]
+    t = build_timeline(script)
+    cues = [s.text for s in t.segments if s.kind == "drill_cue" and s.chapter == "Noun genders"]
+    written = [it.cue for it in gender.items]
+    assert sorted(cues) == sorted(written) and cues != written
+    again = [s.text for s in build_timeline(script).segments if s.kind == "drill_cue"]
+    assert again[: len(cues)] == cues  # seeded: the same lesson always gets the same order
+    swap = [s.text for s in t.segments if s.kind == "drill_cue" and s.chapter == "Swap a word"]
+    assert swap == [it.cue for d in progressive for it in d.items]
+
+
+def test_pdf_lists_gender_cues_in_the_audio_order(script):
+    import json as _json
+
+    from comenius.pdf import _data
+
+    gender = next(d for d in script.drills if getattr(d, "mode", "") == "gender")
+    pdf_cues = [it["cue"] for it in _json.loads(_data(script))["substitution"][0]["items"]]
+    t = build_timeline(script)
+    audio = [s.text for s in t.segments if s.kind == "drill_cue" and s.chapter == "Noun genders"]
+    assert pdf_cues == audio and sorted(pdf_cues) == sorted(it.cue for it in gender.items)
