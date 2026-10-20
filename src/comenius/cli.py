@@ -414,3 +414,27 @@ def schema(
 
 if __name__ == "__main__":
     app()
+
+
+anki_app = typer.Typer(no_args_is_help=True, help="Anki desktop, through the AnkiConnect add-on.")
+app.add_typer(anki_app, name="anki")
+
+
+@anki_app.command("push")
+def anki_push(
+    out: Annotated[Path | None, typer.Option(help="Rendered lessons directory.")] = None,
+    sync: Annotated[bool, typer.Option(help="Sync to AnkiWeb afterward.")] = True,
+    config: ConfigOpt = None,
+) -> None:
+    """Import every rendered lesson's deck into Anki (updates, never duplicates), then sync."""
+    from .ankiconnect import AnkiConnect, AnkiConnectError, push_decks
+
+    cfg = _cfg(config)
+    try:
+        decks = push_decks(out or cfg.out_dir, AnkiConnect(cfg.anki.url), sync=sync)
+    except AnkiConnectError as e:
+        typer.echo(str(e))
+        raise typer.Exit(1) from None
+    typer.echo(
+        f"Imported {len(decks)} lesson deck(s)" + (" and synced to AnkiWeb." if sync else ".")
+    )

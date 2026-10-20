@@ -1,4 +1,8 @@
-"""The command-line loop end to end: state, queue, plan, feed, publish (mock S3)."""
+"""The command-line loop end to end: state, queue, plan, feed, publish (mock S3), anki push."""
+
+import json
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import boto3
 import pytest
@@ -34,7 +38,8 @@ def run(*args: str) -> str:
 
 def test_all_commands_are_registered():
     commands = typer.main.get_command(app).commands  # not --help text: CI adds color codes
-    for name in ("render", "generate", "plan", "state", "queue", "syllabus", "feed", "publish"):
+    names = ("render", "generate", "plan", "state", "queue", "syllabus", "feed", "publish", "anki")
+    for name in names:
         assert name in commands, name
     assert {"add", "show", "assume"} <= set(commands["state"].commands)
 
@@ -94,3 +99,43 @@ def test_publish_derives_public_url_from_bucket_region_and_prefix(script, tmp_pa
     assert result.feed_url == f"{base}/feed.xml"
     feed = s3.get_object(Bucket="lessons", Key="abc123/feed.xml")["Body"].read().decode()
     assert f'<enclosure url="{base}/es-0001.mp3"' in feed
+
+
+class FakeAnkiConnect(BaseHTTPRequestHandler):
+    """Answers like AnkiConnect and records each action."""
+
+    calls: list[dict] = []
+
+    def do_POST(self):
+        req = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        FakeAnkiConnect.calls.append(req)
+        result = {"version": 6, "importPackage": True, "sync": None}[req["action"]]
+        body = json.dumps({"result": result, "error": None}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *args):
+        pass
+
+
+def test_anki_push_imports_every_lesson_deck_then_syncs(script, config, tmp_path):
+    from comenius.config import Config, TTSConfig
+
+    cfg = Config(out_dir=tmp_path / "out", tts=TTSConfig(cache_dir=tmp_path / "cache"))
+    render_lesson(script, cfg, provider="espeak", mp3=False, pdf=False)
+    server = HTTPServer(("127.0.0.1", 0), FakeAnkiConnect)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    with config.open("a", encoding="utf-8") as f:
+        f.write(f'[anki]\nurl = "http://127.0.0.1:{server.server_port}"\n')
+
+    out = run("anki", "push", "-c", str(config))
+    server.shutdown()
+
+    assert "Imported 1 lesson deck(s) and synced" in out
+    actions = [c["action"] for c in FakeAnkiConnect.calls]
+    assert actions == ["version", "importPackage", "sync"]
+    deck = FakeAnkiConnect.calls[1]["params"]["path"]
+    assert deck == str((tmp_path / "out" / "es-0001" / "lesson.apkg").resolve())

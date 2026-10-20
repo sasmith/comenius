@@ -155,6 +155,19 @@ S3-compatible stores work too. For Cloudflare R2, set `endpoint_url =
 "https://<account-id>.r2.cloudflarestorage.com"`, turn on the bucket's public `r2.dev`
 subdomain, and use `https://pub-<id>.r2.dev/<random prefix>` as `base_url`.
 
+### Getting the cards into Anki
+
+Each lesson's deck goes into one `Comenius::Spanish` deck, and card IDs are stable, so
+importing a lesson again updates its cards instead of duplicating them. You can open
+`out/<lesson>/lesson.apkg` by hand, or tap the "Anki deck" link in the episode notes.
+With Anki desktop open and the [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
+add-on installed:
+
+```sh
+uv run comenius anki push            # import every rendered lesson, then sync to AnkiWeb
+uv run comenius anki push --no-sync  # skip the AnkiWeb sync
+```
+
 Other commands:
 
 ```sh

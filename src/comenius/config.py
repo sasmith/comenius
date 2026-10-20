@@ -189,6 +189,10 @@ class StateConfig(BaseModel):
     queue_words_per_lesson: int = Field(3, description="Queued words required per lesson.")
 
 
+class AnkiConfig(BaseModel):
+    url: str = Field("http://127.0.0.1:8765", description="AnkiConnect address (Anki desktop).")
+
+
 class FeedConfig(BaseModel):
     title: str = "Comenius"
     description: str = "Generated audio language lessons."
@@ -227,6 +231,7 @@ class Config(BaseModel):
     llm: LLMConfig = Field(default_factory=LLMConfig)
     state: StateConfig = Field(default_factory=StateConfig)
     feed: FeedConfig = Field(default_factory=FeedConfig)
+    anki: AnkiConfig = Field(default_factory=AnkiConfig)
 
 
 def load_config(path: Path | None = None) -> Config:

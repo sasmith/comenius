@@ -68,6 +68,9 @@ review_items = 5              # due items reviewed per lesson
 new_grammar_points = 1        # syllabus points introduced per planned lesson
 queue_words_per_lesson = 3    # queued words required per planned lesson
 
+[anki]
+url = "http://127.0.0.1:8765"  # AnkiConnect, for `comenius anki push`
+
 [feed]
 title = "Comenius: Spanish"
 description = "Generated audio Spanish lessons."
