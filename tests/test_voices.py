@@ -181,3 +181,34 @@ def test_elevenlabs_voices_lists_spanish_voices_as_pasteable_extra_voices(
     assert len(cfg.pool_voices()) == len(cfg.pool) + 2  # defaults kept
     cast = cast_for(script, cfg, available={"elevenlabs"} | BOTH)
     assert all(ref.provider in {"elevenlabs"} | BOTH for ref in cast.values())
+
+
+@pytest.mark.skipif(not shutil.which("espeak-ng"), reason="needs espeak-ng")
+def test_render_says_which_pool_providers_it_skips(tmp_path, monkeypatch):
+    from typer.testing import CliRunner
+
+    from comenius.cli import app
+
+    from .conftest import FIXTURE
+
+    monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+    config = tmp_path / "comenius.toml"
+    config.write_text(
+        f'out_dir = "{tmp_path / "out"}"\n'
+        f'[tts]\nprovider = "pool"\ncache_dir = "{tmp_path / "tts"}"\n'
+        'narrators = ["espeak:en-us"]\n'
+        + "".join(
+            f'[[tts.pool]]\nprovider = "espeak"\nvoice = "{v}"\nlang = "es"\ngender = "{g}"\n'
+            for v, g in [("es-419+f3", "female"), ("es-419+m3", "male")]
+        )
+        + '[[tts.extra_voices]]\nprovider = "elevenlabs"\nvoice = "abc"\nlang = "es"\n'
+        'gender = "female"\n',
+        encoding="utf-8",
+    )
+    result = CliRunner().invoke(
+        app, ["render", str(FIXTURE), "--no-mp3", "--no-pdf", "--no-anki", "-c", str(config)]
+    )
+    assert result.exit_code == 0, result.output
+    assert "Voice pool: skipping elevenlabs (ELEVENLABS_API_KEY not set)" in result.stderr
+    meta = json.loads((tmp_path / "out" / "es-0001" / "meta.json").read_text())
+    assert meta["voices"]["female_1"] == "espeak:es-419+f3"  # cast from what's usable

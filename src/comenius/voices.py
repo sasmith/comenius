@@ -34,18 +34,36 @@ def _aws_credentials() -> bool:
     return boto3.Session().get_credentials() is not None
 
 
-def provider_available(name: str, cfg: TTSConfig) -> bool:
-    """Whether a provider can be used here (credentials, binaries, model files)."""
+API_KEYS = {
+    "azure": "AZURE_SPEECH_KEY",
+    "openai": "OPENAI_API_KEY",
+    "elevenlabs": "ELEVENLABS_API_KEY",
+}
+
+
+def unavailable_reason(name: str, cfg: TTSConfig) -> str | None:
+    """Why a provider can't be used here (credentials, binaries, model files), or None."""
     if name == "espeak":
-        return bool(shutil.which("espeak-ng") or shutil.which("espeak"))
+        found = shutil.which("espeak-ng") or shutil.which("espeak")
+        return None if found else "espeak-ng not installed"
     if name == "kokoro":
         d = Path(os.path.expanduser(str(cfg.kokoro_dir)))
-        return (d / "kokoro-v1.0.onnx").exists() and (d / "voices-v1.0.bin").exists()
+        if (d / "kokoro-v1.0.onnx").exists() and (d / "voices-v1.0.bin").exists():
+            return None
+        return f"model files not in {d}"
     if name == "polly":
-        return _aws_credentials()
-    env = {"azure": "AZURE_SPEECH_KEY", "openai": "OPENAI_API_KEY"}
-    env["elevenlabs"] = "ELEVENLABS_API_KEY"
-    return bool(os.environ.get(env.get(name, ""), ""))
+        return None if _aws_credentials() else "no AWS credentials (or boto3 not installed)"
+    if name not in API_KEYS:
+        return "unknown provider"
+    return None if os.environ.get(API_KEYS[name]) else f"{API_KEYS[name]} not set"
+
+
+def pool_providers(cfg: TTSConfig) -> tuple[set[str], dict[str, str]]:
+    """Providers the pool and narrator list mention: (usable, {skipped: reason})."""
+    named = {v.provider for v in cfg.pool_voices()} | {n.split(":")[0] for n in cfg.narrators}
+    reasons = {p: unavailable_reason(p, cfg) for p in sorted(named)}
+    usable = {p for p, why in reasons.items() if why is None}
+    return usable, {p: why for p, why in reasons.items() if why is not None}
 
 
 def _roles(script: LessonScript) -> list[str]:
@@ -66,11 +84,7 @@ def cast_for(
             raise TTSError(f"No {name} voice for {missing}; set [tts.voices.{name}]")
         return {role: VoiceRef(provider=name, voice=voices[role]) for role in _roles(script)}
 
-    usable = available if available is not None else {
-        p
-        for p in {v.provider for v in cfg.pool_voices()} | {n.split(":")[0] for n in cfg.narrators}
-        if provider_available(p, cfg)
-    }  # fmt: skip
+    usable = available if available is not None else pool_providers(cfg)[0]
     narrator = next((n for n in cfg.narrators if n.split(":")[0] in usable), None)
     if narrator is None:
         raise TTSError(f"No narrator available from {cfg.narrators}")

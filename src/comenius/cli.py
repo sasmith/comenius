@@ -27,6 +27,18 @@ def _cfg(path: Path | None) -> Config:
     return load_config(path)
 
 
+def _warn_skipped_voices(cfg: Config, provider: str | None) -> None:
+    """In pool mode, say which providers' voices are left out and why."""
+    from .voices import POOL, pool_providers
+
+    if (provider or cfg.tts.provider) != POOL:
+        return
+    skipped = pool_providers(cfg.tts)[1]
+    if skipped:
+        why = ", ".join(f"{p} ({reason})" for p, reason in skipped.items())
+        typer.echo(f"Voice pool: skipping {why}", err=True)
+
+
 def _load_script(path: Path) -> LessonScript:
     return LessonScript.model_validate_json(path.read_text(encoding="utf-8"))
 
@@ -58,6 +70,7 @@ def render(
     from .render import render_lesson
 
     cfg = _cfg(config)
+    _warn_skipped_voices(cfg, provider)
     for path in lessons:
         script = _load_script(path)
         typer.echo(f"Rendering {script.id}: {script.title} ...")
@@ -134,6 +147,7 @@ def generate(
     if then_render:
         from .render import render_lesson
 
+        _warn_skipped_voices(cfg, provider)
         result = render_lesson(script, cfg, provider=provider)
         typer.echo(f"  rendered to {result.lesson_dir}")
         _echo_rates(result)
@@ -356,6 +370,7 @@ def next_lessons(
     from .render import render_lesson
 
     cfg = _cfg(config)
+    _warn_skipped_voices(cfg, provider)
     state = LearnerState(cfg.state.path)
     made = 0
     for n in range(1, count + 1):

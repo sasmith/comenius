@@ -63,6 +63,10 @@ across Polly and Azure (`tts.pool`), using only providers you have
 credentials for. The choice is seeded by the lesson id, so re-rendering a
 lesson keeps its voices. The English narrator stays the same across lessons:
 the first available entry in `tts.narrators`. `meta.json` records who spoke.
+Providers whose keys or credentials are missing are skipped, and the command says
+which (`Voice pool: skipping elevenlabs (ELEVENLABS_API_KEY not set)`). Keys come from
+the environment; keeping them in a git-ignored `.env` and running
+`uv run --env-file .env comenius ...` (or `export UV_ENV_FILE=.env`) works well.
 
 To add ElevenLabs voices to the pool, create an API key, add some native Spanish voices
 to your account from the ElevenLabs voice library, and list them:
