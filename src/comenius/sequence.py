@@ -14,10 +14,12 @@ from dataclasses import dataclass, field
 from .config import LessonConfig
 from .schema import (
     LANG_NAMES,
+    NO_CONTEXT,
     Chapter,
     LessonScript,
     Segment,
     SegmentKind,
+    SpeechContext,
     SubstitutionDrill,
     Timeline,
     TranslationDrill,
@@ -26,8 +28,8 @@ from .schema import (
 from .speechrate import dialog_rates
 from .tts import terms_in
 
-# (voice, lang, text, rate, native terms, term lang, tempo) -> duration in seconds
-DurationFn = Callable[[str, str, str, float, Sequence[str], str, float], float]
+# (voice, lang, text, rate, native terms, term lang, tempo, context) -> duration in seconds
+DurationFn = Callable[[str, str, str, float, Sequence[str], str, float, SpeechContext], float]
 
 NARRATOR: VoiceRole = "narrator"
 NARRATOR_LANG = "en"
@@ -44,6 +46,7 @@ def estimate_duration(
     terms: Sequence[str] = (),
     term_lang: str = "",
     tempo: float = 1.0,
+    context: SpeechContext | None = None,
 ) -> float:
     """Rough speech-duration estimate (no TTS): ~14 chars/second at rate 1.0."""
     return round(max(0.4, len(text) / 14.0) / max(rate, 0.1) / tempo, 3)
@@ -189,9 +192,25 @@ class _Builder:
             return []
         return terms_in(text, self.script.native_terms())
 
-    def dur(self, voice: str, lang: str, text: str, rate: float = 1.0, tempo: float = 1.0) -> float:
+    def dur(
+        self,
+        voice: str,
+        lang: str,
+        text: str,
+        rate: float = 1.0,
+        tempo: float = 1.0,
+        context: SpeechContext = NO_CONTEXT,
+    ) -> float:
         terms = self.native(lang, text)
-        return self.duration_of(voice, lang, text, rate, terms, self.script.dialect, tempo)
+        return self.duration_of(voice, lang, text, rate, terms, self.script.dialect, tempo, context)
+
+    def line_context(self, i: int) -> SpeechContext:
+        """The dialog lines around line i, so it's voiced as part of the conversation."""
+        dialog = self.script.dialog
+        return SpeechContext(
+            previous=dialog[i - 1].text if i > 0 else "",
+            next=dialog[i + 1].text if i + 1 < len(dialog) else "",
+        )
 
     def say(
         self,
@@ -203,8 +222,9 @@ class _Builder:
         rate: float = 1.0,
         tempo: float = 1.0,
         pause_after: float = 0.0,
+        context: SpeechContext = NO_CONTEXT,
     ) -> Segment:
-        d = self.dur(voice, lang, text, rate, tempo)
+        d = self.dur(voice, lang, text, rate, tempo, context)
         terms = self.native(lang, text)
         seg = Segment(
             chapter=self.current_chapter,
@@ -216,6 +236,7 @@ class _Builder:
             tempo=tempo,
             terms=terms,
             term_lang=self.script.dialect if terms else "",
+            context=context,
             pause_after_s=round(pause_after, 3),
             start_s=round(self.clock, 3),
             duration_s=d,
@@ -239,8 +260,10 @@ class _Builder:
         if self.cfg.signposts:
             self.narrate(signpost, pause_after=self.cfg.step_gap_s)
 
-    def learner_pause_for(self, voice: str, text: str, rate: float = 1.0) -> float:
-        return self.cfg.learner_pause(self.dur(voice, self.lang, text, rate))
+    def learner_pause_for(
+        self, voice: str, text: str, rate: float = 1.0, context: SpeechContext = NO_CONTEXT
+    ) -> float:
+        return self.cfg.learner_pause(self.dur(voice, self.lang, text, rate, context=context))
 
     def prompt_then_answer(
         self,
@@ -250,17 +273,22 @@ class _Builder:
         prompt: str,
         answer_voice: VoiceRole,
         answer: str,
+        prompt_context: SpeechContext = NO_CONTEXT,
     ) -> None:
         """Cue, learner pause sized to the answer, then the answer."""
         pause = self.learner_pause_for(answer_voice, answer)
-        self.say(kind, prompt_voice, prompt_lang, prompt, pause_after=pause)
+        self.say(kind, prompt_voice, prompt_lang, prompt, pause_after=pause, context=prompt_context)
         self.say("drill_answer", answer_voice, self.lang, answer, pause_after=self.cfg.step_gap_s)
 
-    def repeat_after_me(self, voice: VoiceRole, text: str, rate: float = 1.0) -> None:
+    def repeat_after_me(
+        self, voice: VoiceRole, text: str, rate: float = 1.0, context: SpeechContext = NO_CONTEXT
+    ) -> None:
         """Target audio and a pause to repeat, twice, with identical pauses."""
-        pause = self.learner_pause_for(voice, text, rate)
-        self.say("buildup", voice, self.lang, text, rate=rate, pause_after=pause)
-        self.say("buildup", voice, self.lang, text, rate=rate, pause_after=pause)
+        pause = self.learner_pause_for(voice, text, rate, context)
+        for _ in range(2):
+            self.say(
+                "buildup", voice, self.lang, text, rate=rate, pause_after=pause, context=context
+            )
 
     # -- recall scheduling ---------------------------------------------------
 
@@ -376,7 +404,10 @@ def build_timeline(
     # 2. Dialog at natural speed
     b.chapter("Listen")  # no signpost: the English intro leads straight into the dialog
     for i, line in enumerate(script.dialog):
-        b.say("dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s)
+        b.say(
+            "dialog", line_voice(i), lang, line.text, pause_after=cfg.line_gap_s,
+            context=b.line_context(i),
+        )  # fmt: skip
     b.clock += cfg.section_gap_s
 
     # 3. Build-up, line by line, with recall woven in
@@ -403,15 +434,23 @@ def build_timeline(
                 b.repeat_after_me(voice, word.form or word.lemma, cfg.buildup_rate)
 
         frags = buildup_fragments(line.text, cfg.max_buildup_steps, lang)
+        around = b.line_context(i)
         if len(frags) > 1:
             # Hear the whole line once, with a pause to try it, before building it up.
-            pause = b.learner_pause_for(voice, line.text)
-            b.say("preview", voice, lang, line.text, pause_after=pause)
+            pause = b.learner_pause_for(voice, line.text, context=around)
+            b.say("preview", voice, lang, line.text, pause_after=pause, context=around)
+        words = line.text.split()
         for frag in frags[:-1]:
-            b.repeat_after_me(voice, frag, cfg.buildup_rate)
+            start = next(
+                k
+                for k in range(len(words))
+                if strip_punct(" ".join(words[k:])) == strip_punct(frag)
+            )
+            cut = SpeechContext(slice_of=line.text, slice_from=start)
+            b.repeat_after_me(voice, frag, cfg.buildup_rate, cut)
         if len(frags) > 1:
             b.guide("Now the whole line.")
-        b.repeat_after_me(voice, line.text)
+        b.repeat_after_me(voice, line.text, context=around)
 
         b.maybe_recall(limit=2)
         b.schedule_recalls(i)
@@ -428,8 +467,10 @@ def build_timeline(
     # 4. Dialog with pauses (shadowing)
     b.section("Your turn", "Now the whole conversation again. Say each line after you hear it.")
     for i, line in enumerate(script.dialog):
-        pause = b.learner_pause_for(line_voice(i), line.text)
-        b.say("shadow", line_voice(i), lang, line.text, pause_after=pause)
+        pause = b.learner_pause_for(line_voice(i), line.text, context=b.line_context(i))
+        b.say(
+            "shadow", line_voice(i), lang, line.text, pause_after=pause, context=b.line_context(i)
+        )
     b.maybe_recall(limit=2)
     b.clock += cfg.section_gap_s
 
@@ -460,7 +501,11 @@ def build_timeline(
             b.guide("Practice this sentence.")
             b.repeat_after_me(voice, drill.model)
             for item in drill.items:
-                b.prompt_then_answer("drill_cue", voice, lang, item.cue, voice, item.answer)
+                # A bare cue word, heard after the model sentence, is voiced as Spanish.
+                b.prompt_then_answer(
+                    "drill_cue", voice, lang, item.cue, voice, item.answer,
+                    prompt_context=SpeechContext(previous=drill.model),
+                )  # fmt: skip
                 b.maybe_recall(limit=1)
             b.clock += cfg.line_gap_s
         b.clock += cfg.section_gap_s
@@ -514,9 +559,15 @@ def build_timeline(
         voice = line_voice(i)
         speed = tempo.get(voice, 1.0)
         if cfg.tempo_method == "provider":
-            b.say("dialog", voice, lang, line.text, rate=speed, pause_after=cfg.line_gap_s)
+            b.say(
+                "dialog", voice, lang, line.text, rate=speed, pause_after=cfg.line_gap_s,
+                context=b.line_context(i),
+            )  # fmt: skip
         else:
-            b.say("dialog", voice, lang, line.text, tempo=speed, pause_after=cfg.line_gap_s)
+            b.say(
+                "dialog", voice, lang, line.text, tempo=speed, pause_after=cfg.line_gap_s,
+                context=b.line_context(i),
+            )  # fmt: skip
     b.guide(f"That's the end of this lesson: {script.title}.", pause_after=0.0)
 
     return Timeline(

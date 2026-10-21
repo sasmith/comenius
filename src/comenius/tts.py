@@ -6,6 +6,7 @@ silence trimmed, so pacing is controlled entirely by the sequencer.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import io
 import json
@@ -26,6 +27,7 @@ import imageio_ffmpeg
 from pydantic import BaseModel
 
 from .config import TTSConfig
+from .schema import NO_CONTEXT, SpeechContext
 
 SAMPLE_RATE = 24_000
 
@@ -196,28 +198,66 @@ class AzureProvider:
         return r.content
 
 
+class ElevenLabsAlignment(BaseModel):
+    characters: list[str]
+    character_start_times_seconds: list[float]
+
+
+class ElevenLabsTimedAudio(BaseModel):
+    audio_base64: str
+    alignment: ElevenLabsAlignment
+
+
 class ElevenLabsProvider:
+    """ElevenLabs. Uses neighboring text as context (`previous_text`/`next_text`) and
+    can return per-character timing, so build-up fragments are cut from the full line."""
+
     name = "elevenlabs"
+    uses_context = True
 
     def __init__(self, model: str) -> None:
         self.model = model
         self.key = _require_env("ELEVENLABS_API_KEY")
 
-    def synthesize(self, text: str, voice: str, lang: str, rate: float) -> bytes:
+    def _post(self, path: str, text: str, lang: str, rate: float, context: SpeechContext):
+        body: dict[str, object] = {
+            "text": text,
+            "model_id": self.model,
+            "language_code": lang.split("-")[0],  # ignored by models without it
+            "voice_settings": {"speed": max(0.7, min(1.2, rate))},
+        }
+        if context.previous:
+            body["previous_text"] = context.previous
+        if context.next:
+            body["next_text"] = context.next
         r = httpx.post(
-            f"{ELEVENLABS_API}/v1/text-to-speech/{voice}",
+            f"{ELEVENLABS_API}{path}",
             params={"output_format": "pcm_24000"},
-            json={
-                "text": text,
-                "model_id": self.model,
-                "voice_settings": {"speed": max(0.7, min(1.2, rate))},
-            },
+            json=body,
             headers={"xi-api-key": self.key},
             timeout=60,
         )
         if r.status_code != 200:
             raise TTSError(f"ElevenLabs TTS {r.status_code}: {r.text[:300]}")
-        return _pcm_to_wav(r.content)
+        return r
+
+    def synthesize(
+        self, text: str, voice: str, lang: str, rate: float, context: SpeechContext = NO_CONTEXT
+    ) -> bytes:
+        return _pcm_to_wav(
+            self._post(f"/v1/text-to-speech/{voice}", text, lang, rate, context).content
+        )
+
+    def synthesize_aligned(
+        self, text: str, voice: str, lang: str, rate: float
+    ) -> tuple[bytes, list[float]]:
+        """WAV of `text` (untrimmed) and the start time of each of its characters."""
+        r = self._post(f"/v1/text-to-speech/{voice}/with-timestamps", text, lang, rate, NO_CONTEXT)
+        timed = ElevenLabsTimedAudio.model_validate(r.json())
+        if "".join(timed.alignment.characters) != text:
+            raise TTSError(f"ElevenLabs alignment doesn't match the text: {text!r}")
+        wav = _pcm_to_wav(base64.b64decode(timed.audio_base64))
+        return wav, timed.alignment.character_start_times_seconds
 
 
 KOKORO_URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
@@ -387,9 +427,19 @@ class ClipCache:
         return self.voice_ref(role).voice
 
     def key(
-        self, role: str, lang: str, text: str, rate: float, terms: Sequence[str], term_lang: str
+        self,
+        role: str,
+        lang: str,
+        text: str,
+        rate: float,
+        terms: Sequence[str],
+        term_lang: str,
+        context: SpeechContext = NO_CONTEXT,
     ) -> str:
         provider = self.provider_for(role)
+        # Context only changes audio for providers that use it, so it's left out of
+        # everyone else's key and their cached clips stay valid.
+        ctx = context.model_dump(exclude_defaults=True) if _uses_context(provider) else {}
         payload = json.dumps(
             {
                 "provider": provider.name,
@@ -399,6 +449,7 @@ class ClipCache:
                 "rate": round(rate, 3),
                 "text": text,
                 **({"terms": sorted(terms), "term_lang": term_lang} if terms else {}),
+                **({"context": ctx} if ctx else {}),
             },
             sort_keys=True,
             ensure_ascii=False,
@@ -414,16 +465,18 @@ class ClipCache:
         terms: Sequence[str] = (),
         term_lang: str = "",
         tempo: float = 1.0,
+        context: SpeechContext = NO_CONTEXT,
     ) -> Path:
         """Synthesize `text`; whole-word `terms` inside it are pronounced in `term_lang`.
 
         Providers with in-request language switching (Azure) get one request.
         Providers that take a language per call (Kokoro, espeak) synthesize each run
         in the same voice and the runs are spliced. Others ignore `terms`.
-        `tempo` speeds the synthesized clip up afterward, keeping pitch.
+        `tempo` speeds the synthesized clip up afterward, keeping pitch. `context`
+        (see SpeechContext) is used only by providers that support it.
         """
         if tempo != 1.0:
-            base = self.clip(role, lang, text, rate, terms, term_lang)
+            base = self.clip(role, lang, text, rate, terms, term_lang, context=context)
             fast = base.with_name(f"{base.stem}-x{tempo:.2f}.wav")
             if not fast.exists():
                 tmp = fast.with_suffix(".tmp.wav")
@@ -442,12 +495,17 @@ class ClipCache:
             terms = ()
         folder = Path(self.cfg.cache_dir) / provider.name
         folder.mkdir(parents=True, exist_ok=True)
-        path = folder / f"{self.key(role, lang, text, rate, terms, term_lang)}.wav"
+        path = folder / f"{self.key(role, lang, text, rate, terms, term_lang, context)}.wav"
         if path.exists():
             self.hits += 1
             return path
         tmp = path.with_suffix(".tmp.wav")
-        if not terms:
+        if context.slice_of and hasattr(provider, "synthesize_aligned"):
+            normalize_audio(self._cut_from_line(role, lang, rate, context, folder), tmp)
+        elif _uses_context(provider):
+            voice = self.voice_for(role)
+            normalize_audio(provider.synthesize(text, voice, lang, rate, context), tmp)
+        elif not terms:
             normalize_audio(provider.synthesize(text, self.voice_for(role), lang, rate), tmp)
         elif hasattr(provider, "synthesize_runs"):
             normalize_audio(provider.synthesize_runs(runs, self.voice_for(role), rate, lang), tmp)
@@ -474,6 +532,31 @@ class ClipCache:
         self.synthesized += 1
         return path
 
+    def _cut_from_line(
+        self, role: str, lang: str, rate: float, context: SpeechContext, folder: Path
+    ) -> bytes:
+        """A build-up fragment: the tail of the full line from word `slice_from`, cut from
+        one synthesis of the whole line so it keeps the line's intonation."""
+        provider = self.provider_for(role)
+        line = context.slice_of
+        full = folder / f"{self.key(role, lang, line, rate, (), '')}-timed.wav"
+        times = full.with_suffix(".json")
+        if not full.exists():
+            wav, starts = provider.synthesize_aligned(line, self.voice_for(role), lang, rate)
+            times.write_text(json.dumps(starts), encoding="utf-8")
+            full.write_bytes(wav)
+            self.synthesized += 1
+        starts = json.loads(times.read_text(encoding="utf-8"))
+        offset = [m.start() for m in re.finditer(r"\S+", line)][context.slice_from]
+        at = max(0.0, starts[offset] - 0.03)  # a little lead-in so the onset isn't clipped
+        result = subprocess.run(
+            [ffmpeg_exe(), "-loglevel", "error", "-ss", f"{at:.3f}", "-i", str(full),
+             "-f", "wav", "-"],
+            capture_output=True,
+            check=True,
+        )  # fmt: skip
+        return result.stdout
+
     def duration(
         self,
         role: str,
@@ -483,5 +566,11 @@ class ClipCache:
         terms: Sequence[str] = (),
         term_lang: str = "",
         tempo: float = 1.0,
+        context: SpeechContext = NO_CONTEXT,
     ) -> float:
-        return round(wav_duration(self.clip(role, lang, text, rate, terms, term_lang, tempo)), 3)
+        path = self.clip(role, lang, text, rate, terms, term_lang, tempo, context)
+        return round(wav_duration(path), 3)
+
+
+def _uses_context(provider: TTSProvider) -> bool:
+    return getattr(provider, "uses_context", False)

@@ -212,3 +212,96 @@ def test_render_says_which_pool_providers_it_skips(tmp_path, monkeypatch):
     assert "Voice pool: skipping elevenlabs (ELEVENLABS_API_KEY not set)" in result.stderr
     meta = json.loads((tmp_path / "out" / "es-0001" / "meta.json").read_text())
     assert meta["voices"]["female_1"] == "espeak:es-419+f3"  # cast from what's usable
+
+
+class _FakeElevenLabsTTS:
+    """Answers ElevenLabs text-to-speech requests with a tone 60 ms per character, and
+    with-timestamps requests with matching per-character times. Records each request."""
+
+    PER_CHAR = 0.06
+
+    def __init__(self):
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        self.requests: list[dict] = []
+        fake = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                timed = self.path.split("?")[0].endswith("/with-timestamps")
+                fake.requests.append({**body, "timed": timed})
+                n = round(len(body["text"]) * fake.PER_CHAR * 24000)
+                pcm = b"".join(
+                    (3000 if (i // 40) % 2 else -3000).to_bytes(2, "little", signed=True)
+                    for i in range(n)
+                )
+                if timed:
+                    import base64
+
+                    starts = [i * fake.PER_CHAR for i in range(len(body["text"]))]
+                    payload = json.dumps({
+                        "audio_base64": base64.b64encode(pcm).decode(),
+                        "alignment": {
+                            "characters": list(body["text"]),
+                            "character_start_times_seconds": starts,
+                            "character_end_times_seconds": [s + fake.PER_CHAR for s in starts],
+                        },
+                    }).encode()  # fmt: skip
+                    ctype = "application/json"
+                else:
+                    payload, ctype = pcm, "application/octet-stream"
+                self.send_response(200)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                self.wfile.write(payload)
+
+            def log_message(self, *args):
+                pass
+
+        self.server = HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+        self.url = f"http://127.0.0.1:{self.server.server_port}"
+
+
+def test_elevenlabs_gets_context_and_build_up_is_cut_from_the_line(script, tmp_path, monkeypatch):
+    from comenius import tts
+
+    fake = _FakeElevenLabsTTS()
+    monkeypatch.setattr(tts, "ELEVENLABS_API", fake.url)
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "test-key")
+    roles = ("narrator", "female_1", "male_1", "female_2", "male_2")
+    cfg = Config(
+        out_dir=tmp_path / "out",
+        tts=TTSConfig(
+            provider="elevenlabs",
+            cache_dir=tmp_path / "cache",
+            voices={"elevenlabs": {r: f"voice_{r}" for r in roles}},
+        ),
+    )
+    result = render_lesson(script, cfg, mp3=False, pdf=False)
+    fake.server.shutdown()
+    plain = [r for r in fake.requests if not r["timed"]]
+    timed = [r for r in fake.requests if r["timed"]]
+
+    # Build-up fragments are never synthesized on their own: each is cut from one timed
+    # synthesis of its full line, and lasts about as long as its share of the line.
+    segs = result.timeline.segments
+    frags = [s for s in segs if s.kind == "buildup" and s.context.slice_of]
+    assert frags and {r["text"] for r in timed} == {s.context.slice_of for s in frags}
+    slow = {r["text"] for r in plain if r["voice_settings"]["speed"] == 0.9}
+    assert not {s.text for s in frags} & slow  # (the same words may occur elsewhere at 1.0)
+    for s in frags:
+        tail = len(s.context.slice_of) - s.context.slice_of.index(s.text.split()[0])
+        assert abs(s.duration_s - tail * fake.PER_CHAR) < 0.25, s.text
+
+    # Dialog lines hear their neighbors; a bare drill cue hears its model sentence.
+    line = script.dialog[1].text
+    req = next(r for r in plain if r["text"] == line)
+    assert req["previous_text"] == script.dialog[0].text
+    assert req["next_text"] == script.dialog[2].text
+    gender = next(d for d in script.drills if getattr(d, "mode", "") == "gender")
+    cue = next(r for r in plain if r["text"] == gender.items[0].cue)
+    assert cue["previous_text"] == gender.model and cue["language_code"] == "es"

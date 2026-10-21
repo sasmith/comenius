@@ -200,6 +200,24 @@ SegmentKind = Literal[
 ]
 
 
+class SpeechContext(BaseModel):
+    """What surrounds a segment, for providers that can use it (ElevenLabs).
+
+    `previous`/`next` are neighboring text the voice hears but doesn't say, so a reply
+    sounds like a reply and a single word sounds like Spanish. A build-up fragment is
+    instead cut from the full line (`slice_of`), starting at word `slice_from`.
+    Other providers ignore all of this.
+    """
+
+    previous: str = ""
+    next: str = ""
+    slice_of: str = ""
+    slice_from: int = 0
+
+
+NO_CONTEXT = SpeechContext()
+
+
 class Segment(BaseModel):
     chapter: str
     kind: SegmentKind
@@ -212,6 +230,7 @@ class Segment(BaseModel):
         default_factory=list, description="Words in `text` to pronounce in `term_lang`."
     )
     term_lang: str = ""
+    context: SpeechContext = Field(default_factory=SpeechContext)
     pause_after_s: float = 0.0
     start_s: float = 0.0
     duration_s: float = 0.0

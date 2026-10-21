@@ -12,7 +12,7 @@ from pathlib import Path
 import genanki
 
 from .audio import clip_to_mp3
-from .schema import LANG_NAMES, LessonScript, VoiceRole
+from .schema import LANG_NAMES, NO_CONTEXT, LessonScript, SpeechContext, VoiceRole
 from .tts import ClipCache
 
 CSS = """
@@ -80,8 +80,8 @@ def render_anki(script: LessonScript, cache: ClipCache, out: Path, media_dir: Pa
     media: list[str] = []
     tags = [f"comenius::{script.id}", script.dialect.replace(" ", "_")]
 
-    def audio(role: VoiceRole, text: str) -> str:
-        clip = cache.clip(role, script.lang, text, 1.0)
+    def audio(role: VoiceRole, text: str, context: SpeechContext = NO_CONTEXT) -> str:
+        clip = cache.clip(role, script.lang, text, 1.0, context=context)
         name = f"comenius_{clip.stem}.mp3"
         target = media_dir / name
         clip_to_mp3(clip, target)
@@ -91,7 +91,14 @@ def render_anki(script: LessonScript, cache: ClipCache, out: Path, media_dir: Pa
     default_voice = next(
         (s.voice_role for s in script.speakers if s.voice_role != "narrator"), "female_1"
     )
+    lines = [line.text for line in script.dialog]
     for word in script.new_words:
+        # A lone word is voiced after a line that uses it, so it sounds like Spanish.
+        forms = {f.lower() for f in (word.lemma, word.form) if f}
+        example = next(
+            (t for t in lines if forms & {w.strip("¿?¡!.,;:").lower() for w in t.split()}),
+            lines[0],
+        )
         deck.add_note(
             genanki.Note(
                 model=VOCAB_MODEL,
@@ -100,19 +107,23 @@ def render_anki(script: LessonScript, cache: ClipCache, out: Path, media_dir: Pa
                     word.form or "",
                     word.gloss,
                     word.pos,
-                    audio(default_voice, word.lemma),
+                    audio(default_voice, word.lemma, SpeechContext(previous=example)),
                     script.id,
                 ],
                 guid=genanki.guid_for("comenius", script.lang, "vocab", word.lemma.lower()),
                 tags=tags,
             )
         )
-    for line in script.dialog:
+    for i, line in enumerate(script.dialog):
         voice = script.speaker(line.speaker).voice_role
+        # The same context the lesson uses, so the clip is shared with the audio.
+        around = SpeechContext(
+            previous=lines[i - 1] if i else "", next=lines[i + 1] if i + 1 < len(lines) else ""
+        )
         deck.add_note(
             genanki.Note(
                 model=SENTENCE_MODEL,
-                fields=[line.text, line.translation, audio(voice, line.text), script.id],
+                fields=[line.text, line.translation, audio(voice, line.text, around), script.id],
                 guid=genanki.guid_for("comenius", script.lang, "sentence", line.text),
                 tags=tags,
             )
