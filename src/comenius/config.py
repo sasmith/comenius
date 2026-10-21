@@ -203,6 +203,11 @@ class AnkiConfig(BaseModel):
     url: str = Field("http://127.0.0.1:8765", description="AnkiConnect address (Anki desktop).")
 
 
+class RemarkableConfig(BaseModel):
+    folder: str = Field("Comenius", description="Top-level folder on the reMarkable.")
+    rmapi: str = Field("rmapi", description="rmapi binary (github.com/ddvk/rmapi).")
+
+
 class FeedConfig(BaseModel):
     title: str = "Comenius"
     description: str = "Generated audio language lessons."
@@ -242,6 +247,7 @@ class Config(BaseModel):
     state: StateConfig = Field(default_factory=StateConfig)
     feed: FeedConfig = Field(default_factory=FeedConfig)
     anki: AnkiConfig = Field(default_factory=AnkiConfig)
+    remarkable: RemarkableConfig = Field(default_factory=RemarkableConfig)
 
 
 def load_config(path: Path | None = None) -> Config:

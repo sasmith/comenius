@@ -193,6 +193,19 @@ uv run comenius anki push            # import every rendered lesson, then sync t
 uv run comenius anki push --no-sync  # skip the AnkiWeb sync
 ```
 
+### Getting the PDFs onto a reMarkable
+
+Install [rmapi](https://github.com/ddvk/rmapi), an unofficial reMarkable cloud client,
+and run `rmapi` once to sign in (it asks for a code from my.remarkable.com). Then:
+
+```sh
+uv run comenius remarkable push   # upload lesson PDFs not already in /Comenius
+uv run comenius next --count 3 --provider pool --publish --anki --remarkable
+```
+
+The tablet downloads them the next time it syncs. rmapi uses reMarkable's private cloud
+API, so a reMarkable update can break it until rmapi catches up.
+
 Other commands:
 
 ```sh

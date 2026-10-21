@@ -174,3 +174,47 @@ def test_next_plans_generates_renders_and_records_in_sequence(
     assert [lsn.topic for lsn in lessons] == defaults[:2]
     assert "llanta" in (tmp_path / "specs" / "es-0002.yaml").read_text()
     assert (tmp_path / "out" / "es-0002" / "lesson.mp3").exists()
+
+
+FAKE_RMAPI = r"""#!/usr/bin/env python3
+# Stands in for rmapi: a reMarkable cloud kept in a JSON file.
+import json, os, sys
+path = os.environ["FAKE_RMAPI_STATE"]
+cloud = json.load(open(path)) if os.path.exists(path) else {"/": []}
+cmd, *args = sys.argv[1:]
+with open(path + ".log", "a") as log:
+    log.write(" ".join([cmd, *args]) + "\n")
+if cmd == "ls":
+    for kind, name in cloud.get(args[0], []):
+        print(f"[{kind}]\t{name}")
+elif cmd == "mkdir":
+    cloud["/"].append(["d", args[0].strip("/")])
+    cloud[args[0]] = []
+elif cmd == "put":
+    assert os.path.getsize(args[0]) > 0
+    cloud[args[1]].append(["f", os.path.basename(args[0])[: -len(".pdf")]])
+json.dump(cloud, open(path, "w"))
+"""
+
+
+def test_remarkable_push_uploads_each_lesson_pdf_once(script, config, tmp_path, monkeypatch):
+    from comenius.config import Config, TTSConfig
+
+    cfg = Config(out_dir=tmp_path / "out", tts=TTSConfig(cache_dir=tmp_path / "cache"))
+    render_lesson(script, cfg, provider="espeak", mp3=False, anki=False)
+    fake = tmp_path / "rmapi"
+    fake.write_text(FAKE_RMAPI)
+    fake.chmod(0o755)
+    state = tmp_path / "cloud.json"
+    monkeypatch.setenv("FAKE_RMAPI_STATE", str(state))
+    with config.open("a", encoding="utf-8") as f:
+        f.write(f'[remarkable]\nrmapi = "{fake}"\n')
+
+    first = run("remarkable", "push", "-c", str(config))
+    second = run("remarkable", "push", "-c", str(config))
+
+    title = f"es-0001 {script.title}"
+    assert f"uploaded {title}" in first and "1 new PDF(s) in /Comenius" in first
+    assert "0 new PDF(s)" in second
+    cloud = json.loads(state.read_text())
+    assert cloud["/"] == [["d", "Comenius"]] and cloud["/Comenius"] == [["f", title]]

@@ -79,6 +79,9 @@ queue_words_per_lesson = 3    # queued words required per planned lesson
 [anki]
 url = "http://127.0.0.1:8765"  # AnkiConnect, for `comenius anki push`
 
+[remarkable]
+folder = "Comenius"           # top-level folder for `comenius remarkable push` (needs rmapi)
+
 [feed]
 title = "Comenius: Spanish"
 description = "Generated audio Spanish lessons."

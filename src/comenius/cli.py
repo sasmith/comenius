@@ -358,6 +358,9 @@ def next_lessons(
     anki: Annotated[
         bool, typer.Option("--anki", help="Push decks to Anki (AnkiConnect) at the end.")
     ] = False,
+    remarkable: Annotated[
+        bool, typer.Option("--remarkable", help="Upload new PDFs to the reMarkable at the end.")
+    ] = False,
     lang: Annotated[str, typer.Option(help="Language code.")] = "es",
     config: ConfigOpt = None,
 ) -> None:
@@ -403,6 +406,8 @@ def next_lessons(
             typer.echo(str(e))
             raise typer.Exit(1) from None
         typer.echo(f"Pushed {len(decks)} deck(s) to Anki and synced.")
+    if made and remarkable:
+        _push_remarkable(cfg)
     if made < count:
         raise typer.Exit(1)
 
@@ -564,3 +569,31 @@ def voices_elevenlabs(lang: Annotated[str, typer.Option(help="Language code.")] 
         typer.echo(f'lang = "{lang}"')
         typer.echo(f'gender = "{gender if gender in ("female", "male") else "female"}"')
         typer.echo(f'accent = "{accent}"')
+
+
+def _push_remarkable(cfg: Config, out: Path | None = None) -> None:
+    from .remarkable import RemarkableError, Rmapi, push_pdfs
+
+    try:
+        uploaded = push_pdfs(out or cfg.out_dir, Rmapi(cfg.remarkable.rmapi), cfg.remarkable.folder)
+    except RemarkableError as e:
+        typer.echo(str(e))
+        raise typer.Exit(1) from None
+    for name in uploaded:
+        typer.echo(f"  uploaded {name}")
+    typer.echo(
+        f"{len(uploaded)} new PDF(s) in /{cfg.remarkable.folder.strip('/')} on the reMarkable."
+    )
+
+
+remarkable_app = typer.Typer(no_args_is_help=True, help="reMarkable tablet, through rmapi.")
+app.add_typer(remarkable_app, name="remarkable")
+
+
+@remarkable_app.command("push")
+def remarkable_push(
+    out: Annotated[Path | None, typer.Option(help="Rendered lessons directory.")] = None,
+    config: ConfigOpt = None,
+) -> None:
+    """Upload every rendered lesson PDF that isn't on the reMarkable yet."""
+    _push_remarkable(_cfg(config), out)
