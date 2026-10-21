@@ -81,6 +81,9 @@ def _pcm_to_wav(pcm: bytes, rate: int = SAMPLE_RATE) -> bytes:
     return buf.getvalue()
 
 
+ELEVENLABS_API = "https://api.elevenlabs.io"
+
+
 def _require_env(var: str) -> str:
     value = os.environ.get(var)
     if not value:
@@ -202,7 +205,7 @@ class ElevenLabsProvider:
 
     def synthesize(self, text: str, voice: str, lang: str, rate: float) -> bytes:
         r = httpx.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{voice}",
+            f"{ELEVENLABS_API}/v1/text-to-speech/{voice}",
             params={"output_format": "pcm_24000"},
             json={
                 "text": text,

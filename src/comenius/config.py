@@ -147,7 +147,17 @@ class TTSConfig(BaseModel):
         description="espeak, kokoro, polly, azure, openai, elevenlabs, or 'pool' to cast each "
         "lesson's speakers from `pool` across providers.",
     )
-    pool: list[PoolVoice] = Field(default_factory=lambda: list(DEFAULT_POOL))
+    pool: list[PoolVoice] = Field(
+        default_factory=lambda: list(DEFAULT_POOL),
+        description="Voices pool mode casts from. Setting it replaces the default list.",
+    )
+    extra_voices: list[PoolVoice] = Field(
+        default_factory=list, description="Voices added to `pool` (keeps the defaults)."
+    )
+
+    def pool_voices(self) -> list[PoolVoice]:
+        return self.pool + self.extra_voices
+
     narrators: list[str] = Field(
         default_factory=lambda: list(DEFAULT_NARRATORS),
         description="'provider:voice' narrator preferences for pool mode; first available wins.",

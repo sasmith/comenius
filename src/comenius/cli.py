@@ -508,3 +508,44 @@ def anki_push(
     typer.echo(
         f"Imported {len(decks)} lesson deck(s)" + (" and synced to AnkiWeb." if sync else ".")
     )
+
+
+voices_app = typer.Typer(no_args_is_help=True, help="Find voices to add to the pool.")
+app.add_typer(voices_app, name="voices")
+
+
+@voices_app.command("elevenlabs")
+def voices_elevenlabs(lang: Annotated[str, typer.Option(help="Language code.")] = "es") -> None:
+    """List your ElevenLabs voices that speak LANG, as [[tts.extra_voices]] entries to paste."""
+    from .tts import TTSError
+    from .voices import elevenlabs_voices
+
+    try:
+        voices = elevenlabs_voices(lang)
+    except TTSError as e:
+        typer.echo(str(e), err=True)  # stdout may be appended to comenius.toml
+        raise typer.Exit(1) from None
+    if not voices:
+        typer.echo(
+            f"No voices verified for {lang!r} in your account. Add some from the ElevenLabs "
+            "voice library (filter by language), then run this again.",
+            err=True,
+        )
+        raise typer.Exit(1)
+    typer.echo(
+        "# Paste into comenius.toml (after the [tts] section). These add to the default pool.\n"
+        "# Keep native speakers whose accent you want."
+    )
+    for v in voices:
+        spoken = v.speaks(lang)
+        accent = spoken.locale or spoken.accent or v.labels.get("accent", "")
+        gender = v.labels.get("gender", "")
+        typer.echo(f"\n# {v.name}: {v.labels.get('description', '')} {accent}".rstrip())
+        if gender not in ("female", "male"):
+            typer.echo("# gender not labeled: set female or male")
+        typer.echo("[[tts.extra_voices]]")
+        typer.echo('provider = "elevenlabs"')
+        typer.echo(f'voice = "{v.voice_id}"')
+        typer.echo(f'lang = "{lang}"')
+        typer.echo(f'gender = "{gender if gender in ("female", "male") else "female"}"')
+        typer.echo(f'accent = "{accent}"')

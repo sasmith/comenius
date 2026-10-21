@@ -31,6 +31,14 @@ azure_region = "westus2"      # or AZURE_SPEECH_REGION
 openai_model = "gpt-4o-mini-tts"
 kokoro_dir = "~/.cache/comenius/kokoro"
 
+# Add voices to the default pool (e.g. from `comenius voices elevenlabs`):
+# [[tts.extra_voices]]
+# provider = "elevenlabs"
+# voice = "<voice id>"
+# lang = "es"
+# gender = "female"
+# accent = "es-MX"
+
 # Pool mode: each lesson's speakers are drawn from these voices (providers without
 # credentials are skipped); the choice is seeded by lesson id. Setting `pool` replaces
 # the default list (Polly Mia/Andres/Lupe/Pedro and six Azure es-MX/es-US voices).

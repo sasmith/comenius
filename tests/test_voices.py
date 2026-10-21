@@ -102,3 +102,79 @@ def test_render_in_pool_mode(script, tmp_path):
     assert voices["narrator"] == "espeak:en-us"
     assert voices["female_1"] in {"espeak:es-419+f3", "espeak:es-419+f4"}
     assert voices["male_1"] == "espeak:es-419+m3"
+
+
+def test_elevenlabs_voices_lists_spanish_voices_as_pasteable_extra_voices(
+    script, tmp_path, monkeypatch
+):
+    """`comenius voices elevenlabs` against a fake ElevenLabs API, then the pasted
+    entries extend (not replace) the pool used for casting."""
+    import threading
+    import tomllib
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from urllib.parse import parse_qs, urlparse
+
+    from typer.testing import CliRunner
+
+    from comenius import tts
+    from comenius.cli import app
+
+    pages = {
+        None: {
+            "voices": [
+                {
+                    "voice_id": "v_es_f",
+                    "name": "Valeria",
+                    "labels": {"gender": "female", "description": "warm"},
+                    "verified_languages": [{"language": "es", "locale": "es-MX"}],
+                },
+                {"voice_id": "v_en", "name": "Rachel", "labels": {"gender": "female"},
+                 "verified_languages": [{"language": "en", "locale": "en-US"}]},
+            ],
+            "has_more": True,
+            "next_page_token": "p2",
+        },
+        "p2": {
+            "voices": [
+                {"voice_id": "v_es_m", "name": "Mateo", "labels": {"gender": "male"},
+                 "verified_languages": [{"language": "es", "accent": "argentine"}]},
+            ],
+            "has_more": False,
+        },
+    }  # fmt: skip
+    seen = []
+
+    class FakeElevenLabs(BaseHTTPRequestHandler):
+        def do_GET(self):
+            url = urlparse(self.path)
+            seen.append((url.path, self.headers["xi-api-key"]))
+            token = parse_qs(url.query).get("next_page_token", [None])[0]
+            body = json.dumps(pages[token]).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args):
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), FakeElevenLabs)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    monkeypatch.setattr(tts, "ELEVENLABS_API", f"http://127.0.0.1:{server.server_port}")
+    monkeypatch.setenv("ELEVENLABS_API_KEY", "test-key")
+
+    result = CliRunner().invoke(app, ["voices", "elevenlabs"])
+    server.shutdown()
+    assert result.exit_code == 0, result.output
+    assert seen == [("/v2/voices", "test-key")] * 2
+    assert "Rachel" not in result.output
+
+    cfg = TTSConfig.model_validate(
+        {"provider": "pool", **tomllib.loads("[tts]\n" + result.output)["tts"]}
+    )
+    added = [(v.voice, v.gender, v.accent) for v in cfg.extra_voices]
+    assert added == [("v_es_f", "female", "es-MX"), ("v_es_m", "male", "argentine")]
+    assert len(cfg.pool_voices()) == len(cfg.pool) + 2  # defaults kept
+    cast = cast_for(script, cfg, available={"elevenlabs"} | BOTH)
+    assert all(ref.provider in {"elevenlabs"} | BOTH for ref in cast.values())

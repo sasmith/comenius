@@ -64,6 +64,17 @@ credentials for. The choice is seeded by the lesson id, so re-rendering a
 lesson keeps its voices. The English narrator stays the same across lessons:
 the first available entry in `tts.narrators`. `meta.json` records who spoke.
 
+To add ElevenLabs voices to the pool, create an API key, add some native Spanish voices
+to your account from the ElevenLabs voice library, and list them:
+
+```sh
+export ELEVENLABS_API_KEY=...
+uv run comenius voices elevenlabs >> comenius.toml   # or paste what it prints
+```
+
+It prints `[[tts.extra_voices]]` entries, which add to the default pool instead of
+replacing it. Check each voice's gender and accent before keeping it.
+
 Generate a new lesson from a spec with Claude, then render it:
 
 ```sh
