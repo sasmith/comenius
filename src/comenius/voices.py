@@ -100,15 +100,16 @@ def cast_for(
 
 
 class ElevenLabsLanguage(BaseModel):
+    # The API sends null for unknown accent or locale.
     language: str
-    accent: str = ""
-    locale: str = ""
+    accent: str | None = None
+    locale: str | None = None
 
 
 class ElevenLabsVoice(BaseModel):
     voice_id: str
     name: str
-    labels: dict[str, str] = {}
+    labels: dict[str, str | None] = {}
     verified_languages: list[ElevenLabsLanguage] = []
 
     def speaks(self, lang: str) -> ElevenLabsLanguage | None:

@@ -538,9 +538,9 @@ def voices_elevenlabs(lang: Annotated[str, typer.Option(help="Language code.")] 
     )
     for v in voices:
         spoken = v.speaks(lang)
-        accent = spoken.locale or spoken.accent or v.labels.get("accent", "")
-        gender = v.labels.get("gender", "")
-        typer.echo(f"\n# {v.name}: {v.labels.get('description', '')} {accent}".rstrip())
+        accent = spoken.locale or spoken.accent or v.labels.get("accent") or ""
+        gender = v.labels.get("gender") or ""
+        typer.echo(f"\n# {v.name}: {v.labels.get('description') or ''} {accent}".rstrip())
         if gender not in ("female", "male"):
             typer.echo("# gender not labeled: set female or male")
         typer.echo("[[tts.extra_voices]]")

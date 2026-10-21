@@ -136,8 +136,11 @@ def test_elevenlabs_voices_lists_spanish_voices_as_pasteable_extra_voices(
         },
         "p2": {
             "voices": [
-                {"voice_id": "v_es_m", "name": "Mateo", "labels": {"gender": "male"},
-                 "verified_languages": [{"language": "es", "accent": "argentine"}]},
+                {"voice_id": "v_es_m", "name": "Mateo",
+                 "labels": {"gender": "male", "description": None},
+                 "verified_languages": [{"language": "fr", "locale": None, "accent": None},
+                                        {"language": "es", "accent": "argentine",
+                                         "locale": None}]},
             ],
             "has_more": False,
         },
