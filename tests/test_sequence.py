@@ -247,3 +247,18 @@ def test_pdf_lists_gender_cues_in_the_audio_order(script):
     t = build_timeline(script)
     audio = [s.text for s in t.segments if s.kind == "drill_cue" and s.chapter == "Noun genders"]
     assert pdf_cues == audio and sorted(pdf_cues) == sorted(it.cue for it in gender.items)
+
+
+def test_review_skips_items_the_lesson_already_practices(script):
+    # The sample lesson's review list includes "Muchas gracias.", and its dialog already
+    # ends "Perfecto. Muchas gracias."
+    assert [r.answer for r in script.review][-1] == "Muchas gracias."
+    t = build_timeline(script)
+    review = [s.text for s in t.segments if s.chapter == "Review" and s.kind == "drill_answer"]
+    assert review == ["Buenos días.", "¿Dónde está la estación?"]
+
+    import json as _json
+
+    from comenius.pdf import _data
+
+    assert [r["answer"] for r in _json.loads(_data(script))["review"]] == review

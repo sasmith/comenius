@@ -531,11 +531,13 @@ def build_timeline(
             b.clock += cfg.line_gap_s
         b.clock += cfg.section_gap_s
 
-    # 7. Review: earlier lessons, then a final pass over today's lines
-    if script.review or b.pending:
+    # 7. Review: earlier lessons (minus what this lesson already practiced), then a final
+    # pass over today's lines
+    review = script.review_to_prompt()
+    if review or b.pending:
         b.section("Review", "A few phrases from earlier lessons.")
-        if script.review:
-            for r_i, item in enumerate(script.review):
+        if review:
+            for r_i, item in enumerate(review):
                 b.prompt_then_answer(
                     "review",
                     NARRATOR,

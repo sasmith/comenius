@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -106,6 +107,10 @@ class TranslationDrill(BaseModel):
 Drill = Annotated[SubstitutionDrill | TranslationDrill, Field(discriminator="type")]
 
 
+def _words(text: str) -> list[str]:
+    return re.findall(r"[^\W\d_]+", text.lower())
+
+
 class ReviewItem(BaseModel):
     """An item from an earlier lesson, prompted English -> target."""
 
@@ -144,6 +149,27 @@ class LessonScript(BaseModel):
 
     def speaker(self, speaker_id: str) -> Speaker:
         return next(s for s in self.speakers if s.id == speaker_id)
+
+    def review_to_prompt(self) -> list[ReviewItem]:
+        """Review items the lesson doesn't already practice.
+
+        An item whose words appear, in order, in a dialog line or a drill sentence is
+        practiced there, so the Review section skips it. (It still counts as reviewed
+        when the lesson is recorded.) Matching is on surface forms: a lemma like
+        "costar" isn't matched by "cuesta".
+        """
+        texts = [line.text for line in self.dialog]
+        for d in self.drills:
+            if isinstance(d, SubstitutionDrill):
+                texts += [d.model, *(it.answer for it in d.items)]
+            else:
+                texts += [a for it in d.items for a in it.answers]
+        practiced = [f" {' '.join(_words(t))} " for t in texts]
+        return [
+            r
+            for r in self.review
+            if not any(f" {' '.join(_words(r.answer))} " in t for t in practiced)
+        ]
 
     def native_terms(self) -> list[str]:
         """Words in English narration to pronounce in the target language."""

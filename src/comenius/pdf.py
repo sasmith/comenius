@@ -129,7 +129,7 @@ def _data(script: LessonScript) -> str:
         ],
         "substitution": [s.model_dump() for s in subs],
         "translation": [t.model_dump() for t in trans],
-        "review": [r.model_dump() for r in script.review],
+        "review": [r.model_dump() for r in script.review_to_prompt()],  # as in the audio
     }
     return json.dumps(payload, ensure_ascii=False)
 

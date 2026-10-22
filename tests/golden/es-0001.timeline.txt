@@ -158,14 +158,12 @@
   775.90 drill_answer male_1     1.50 Buenos días.
   778.25 review       narrator   3.57 Where is the station?
   783.32 drill_answer female_1   1.50 ¿Dónde está la estación?
-  786.54 review       narrator   2.61 Thank you very much.
-  790.57 drill_answer male_1     1.50 Muchas gracias.
-  794.64 narration    narrator   1.50 One last listen. Notice how much more you catch now.
-  799.86 dialog       male_1     0.70 Buenas tardes. ¿En qué le puedo ayudar?
-  803.09 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
-  806.78 dialog       male_1     0.70 ¿Qué le pasa?
-  808.32 dialog       female_1   0.70 Tiene una llanta ponchada.
-  810.71 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
-  813.68 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
-  816.91 dialog       male_1     0.70 Son cien pesos.
-  818.59 dialog       female_1   0.70 Perfecto. Muchas gracias.
+  788.04 narration    narrator   1.50 One last listen. Notice how much more you catch now.
+  793.25 dialog       male_1     0.70 Buenas tardes. ¿En qué le puedo ayudar?
+  796.48 dialog       female_1   0.70 Buenas tardes. Necesito arreglar mi bicicleta.
+  800.17 dialog       male_1     0.70 ¿Qué le pasa?
+  801.72 dialog       female_1   0.70 Tiene una llanta ponchada.
+  804.10 dialog       male_1     0.70 Muy bien. ¿Para cuándo la necesita?
+  807.08 dialog       female_1   0.70 Para mañana, por favor. ¿Cuánto cuesta?
+  810.31 dialog       male_1     0.70 Son cien pesos.
+  811.98 dialog       female_1   0.70 Perfecto. Muchas gracias.
