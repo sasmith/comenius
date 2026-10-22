@@ -15,7 +15,7 @@ GOLDEN = Path(__file__).parent / "golden" / "es-0001.timeline.txt"
 
 def test_buildup_grows_from_the_end():
     frags = buildup_fragments("Perdón, ¿dónde está la estación?", 3)
-    assert frags == ["la estación", "está la estación", "Perdón, ¿dónde está la estación?"]
+    assert frags == ["la estación", "Perdón, ¿dónde está la estación?"]
     # Every fragment is a suffix of the stripped sentence
     for f in frags[:-1]:
         assert "dónde está la estación".endswith(f) or "Perdón dónde está la estación".endswith(f)
@@ -32,20 +32,38 @@ def test_intermediate_fragments_have_no_punctuation():
 
 def test_buildup_spans_the_whole_line():
     frags = buildup_fragments("Buenas tardes. ¿En qué le puedo ayudar?")
-    assert frags[0] == "qué le puedo ayudar"  # never "puedo ayudar": "le" stays on its verb
+    assert frags[0] == "le puedo ayudar"  # never "puedo ayudar": "le" stays on its verb
     assert "¿En qué le puedo ayudar?" in frags
     assert frags[-1] == "Buenas tardes. ¿En qué le puedo ayudar?"
 
 
 def test_buildup_never_cuts_a_word_from_the_word_it_leans_on():
     # A pronoun, article, possessive, or "no" stays with what follows it.
-    assert buildup_fragments("Hola, me llamo Laura.")[0] == "me llamo Laura"
-    assert buildup_fragments("Tiene una llanta ponchada.")[0] == "una llanta ponchada"
+    # "llamo Laura" would cut off "me"; "me llamo Laura" leaves only "Hola," to add, so
+    # this four-word line isn't split at all. Same for "una llanta ponchada".
+    assert buildup_fragments("Hola, me llamo Laura.") == ["Hola, me llamo Laura."]
+    assert buildup_fragments("Tiene una llanta ponchada.") == ["Tiene una llanta ponchada."]
+    assert "me llamo Laura Gómez" in buildup_fragments("Bueno, hola, me llamo Laura Gómez.")
     for line in ["No sé dónde está mi casa nueva.", "Perdón, ¿dónde está la estación?"]:
         for frag in buildup_fragments(line)[:-1]:
             words = line.replace(",", "").replace("¿", "").replace("?", "").rstrip(".").split()
             before = words[len(words) - len(frag.split()) - 1]
             assert before.lower() not in {"no", "mi", "la"}, (line, frag)
+
+
+def test_every_buildup_step_adds_at_least_two_words():
+    lines = [
+        "Tu café es muy bueno.",
+        "Buenas tardes. ¿En qué le puedo ayudar?",
+        "Muy bien, ¿para cuándo la necesita usted?",
+        "Necesito arreglar la llanta de mi bicicleta mañana por la tarde.",
+    ]
+    for line in lines:
+        sizes = [len(f.split()) for f in buildup_fragments(line)]
+        assert all(b - a >= 2 for a, b in zip([0, *sizes[:-1]], sizes, strict=True)), (line, sizes)
+    assert buildup_fragments("Tu café es muy bueno.") == ["muy bueno", "Tu café es muy bueno."]
+    long = buildup_fragments("Necesito arreglar la llanta de mi bicicleta mañana por la tarde.")
+    assert len(long) == 4  # long lines keep their intermediate steps
 
 
 def test_buildup_crosses_sentences_at_phrase_boundaries():

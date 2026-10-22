@@ -99,6 +99,9 @@ BOUND_WORDS: dict[str, set[str]] = {
 }  # fmt: skip
 
 
+MIN_STEP = 2  # fewest words a build-up step may add
+
+
 def buildup_fragments(line: str, max_steps: int = 4, lang: str = "es") -> list[str]:
     """Backward build-up of a whole dialog line.
 
@@ -109,7 +112,7 @@ def buildup_fragments(line: str, max_steps: int = 4, lang: str = "es") -> list[s
     start or after a comma) and keeps its punctuation.
 
     >>> buildup_fragments("Buenas tardes. ¿En qué le puedo ayudar?")
-    ['qué le puedo ayudar', '¿En qué le puedo ayudar?', \
+    ['le puedo ayudar', '¿En qué le puedo ayudar?', \
 'Buenas tardes. ¿En qué le puedo ayudar?']
     """
     words = line.split()
@@ -128,22 +131,23 @@ def buildup_fragments(line: str, max_steps: int = 4, lang: str = "es") -> list[s
         if c in sentence_starts or normalize_token(words[c - 1]) not in bound
     )
 
+    # Target fragment sizes spread evenly up to the full line, plus the final sentence on
+    # its own. Each is snapped to the nearest allowed start that keeps every step, the
+    # jump to the full line included, at least MIN_STEP words, so a short line isn't
+    # built up one tiny word ("es", "tu") at a time.
     steps = min(max_steps, n - 1)
-    starts: set[int] = set()
-    for i in range(1, steps):
-        target = n - max(2, round(n * i / steps))
-        if target <= 0:
-            continue
-        snapped = min(allowed, key=lambda c: (abs(c - target), -c))
-        if 0 < snapped < n - 1 or snapped in sentence_starts[1:]:
-            starts.add(snapped)
+    targets = {max(MIN_STEP, round(n * i / steps)) for i in range(1, steps)}
     if last > 0:
-        starts.add(last)  # always teach the final sentence on its own
+        targets.add(n - last)
+    starts: list[int] = []
+    for size in sorted(targets):
+        prev = n - starts[-1] if starts else 0
+        options = [c for c in allowed if MIN_STEP <= c and n - c - prev >= MIN_STEP]
+        if options:
+            starts.append(min(options, key=lambda c: (abs(n - c - size), -c)))
 
     frags = []
-    for start in sorted(starts, reverse=True):
-        if start == 0:
-            continue
+    for start in starts:
         if start > last:
             frags.append(strip_punct(" ".join(words[start:])))
         else:
